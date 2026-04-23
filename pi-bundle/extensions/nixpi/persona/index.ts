@@ -12,7 +12,7 @@ const PERSONA_LAYERS = [
   { title: "Skill", file: "skill.md" },
 ] as const;
 
-type Guardrail = { tool: string; pattern: RegExp; label: string };
+type Guardrail = { tool: string; pattern: RegExp; label: string; elevate: "never" | "sudo" };
 type SavedContext = { savedAt: string; host?: string; cwd?: string };
 type BlueprintVersions = {
   packageVersion: string;
@@ -156,16 +156,18 @@ function parseGuardrails(yaml: string): Guardrail[] {
   let currentTool: string | null = null;
   let currentPattern: string | null = null;
   let currentLabel: string | null = null;
+  let currentElevate: "never" | "sudo" = "never";
 
   const flush = () => {
     if (!currentTool || !currentPattern || !currentLabel) return;
     try {
-      guardrails.push({ tool: currentTool, pattern: new RegExp(currentPattern), label: currentLabel });
+      guardrails.push({ tool: currentTool, pattern: new RegExp(currentPattern), label: currentLabel, elevate: currentElevate });
     } catch {
       // ignore invalid regexes
     }
     currentPattern = null;
     currentLabel = null;
+    currentElevate = "never";
   };
 
   for (const rawLine of lines) {
@@ -175,20 +177,26 @@ function parseGuardrails(yaml: string): Guardrail[] {
     const toolMatch = line.match(/^- tool:\s*(.+)$/);
     if (toolMatch) {
       flush();
-      currentTool = toolMatch[1].trim().replace(/^['\"]|['\"]$/g, "");
+      currentTool = toolMatch[1].trim().replace(/^['"]|['"]$/g, "");
       continue;
     }
 
     const patternMatch = line.match(/^- pattern:\s*(.+)$/);
     if (patternMatch) {
       flush();
-      currentPattern = patternMatch[1].trim().replace(/^['\"]|['\"]$/g, "");
+      currentPattern = patternMatch[1].trim().replace(/^['"]|['"]$/g, "");
       continue;
     }
 
     const labelMatch = line.match(/^label:\s*(.+)$/);
     if (labelMatch) {
-      currentLabel = labelMatch[1].trim().replace(/^['\"]|['\"]$/g, "");
+      currentLabel = labelMatch[1].trim().replace(/^['"]|['"]$/g, "");
+      continue;
+    }
+
+    const elevateMatch = line.match(/^elevate:\s*(never|sudo)$/);
+    if (elevateMatch) {
+      currentElevate = elevateMatch[1] as "never" | "sudo";
       flush();
       continue;
     }
@@ -196,6 +204,15 @@ function parseGuardrails(yaml: string): Guardrail[] {
 
   flush();
   return guardrails;
+}
+
+async function probeSudo(): Promise<boolean> {
+  try {
+    await execFileAsync("sudo", ["-n", "true"], { timeout: 5_000 });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function saveContext(data: SavedContext) {
@@ -273,7 +290,7 @@ export default function personaExtension(pi: ExtensionAPI) {
     return { systemPrompt };
   });
 
-  pi.on("tool_call", async (event) => {
+  pi.on("tool_call", async (event, ctx) => {
     const repoDir = nixpiRepoDir();
 
     if (event.toolName === "nix_config_proposal") {
@@ -310,7 +327,19 @@ export default function personaExtension(pi: ExtensionAPI) {
     for (const rule of guardrails) {
       if (rule.tool !== event.toolName) continue;
       if (rule.pattern.test(command)) {
-        return { block: true as const, reason: `Blocked dangerous command: ${rule.label}` };
+        // Sudo-elevatable: allow through if sudo credentials are active
+        if (rule.elevate === "sudo" && (await probeSudo())) {
+          if (ctx.hasUI) {
+            ctx.ui.notify(`⚠ Elevated (sudo active): ${rule.label}`, "warning");
+          }
+          return; // allow the command through
+        }
+        return {
+          block: true as const,
+          reason: rule.elevate === "sudo"
+            ? `Blocked dangerous command: ${rule.label} — run 'sudo -v' in another terminal to elevate`
+            : `Blocked dangerous command: ${rule.label}`,
+        };
       }
     }
     return;

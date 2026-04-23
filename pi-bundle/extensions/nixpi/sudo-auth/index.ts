@@ -33,7 +33,7 @@ interface SudoState {
 
 const state: SudoState = {
   lastConfirmed: null,
-  estimatedTimeoutMs: 5 * 60 * 1000, // 5 min default
+  estimatedTimeoutMs: 1 * 60 * 1000, // 1 min — matches sudoers timestamp_timeout
   lastKnownActive: false,
 };
 
