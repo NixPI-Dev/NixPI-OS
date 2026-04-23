@@ -228,9 +228,6 @@ in {
 
   # ── PI skills ─────────────────────────────────────────────────────────────
   home.file.".pi/agent/skills/wiki/SKILL.md".source = piBundleRoot + "/skills/wiki/SKILL.md";
-  home.file.".pi/agent/skills/wiki-migration/SKILL.md".source = piBundleRoot + "/skills/wiki-migration/SKILL.md";
-  home.file.".pi/agent/skills/wiki-migration/scripts/scan.sh".source = piBundleRoot + "/skills/wiki-migration/scripts/scan.sh";
-  home.file.".pi/agent/skills/wiki-migration/scripts/batch-list.sh".source = piBundleRoot + "/skills/wiki-migration/scripts/batch-list.sh";
   home.file.".pi/agent/skills/os-operations/SKILL.md".source = piBundleRoot + "/skills/os-operations/SKILL.md";
   home.file.".pi/agent/skills/self-evolution/SKILL.md".source = piBundleRoot + "/skills/self-evolution/SKILL.md";
   home.file.".pi/agent/skills/provisioning/SKILL.md".source = piBundleRoot + "/skills/provisioning/SKILL.md";
