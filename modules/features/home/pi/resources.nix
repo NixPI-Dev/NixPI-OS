@@ -230,8 +230,7 @@ in {
   home.file.".pi/agent/skills/wiki/SKILL.md".source = piBundleRoot + "/skills/wiki/SKILL.md";
   home.file.".pi/agent/skills/os-operations/SKILL.md".source = piBundleRoot + "/skills/os-operations/SKILL.md";
   home.file.".pi/agent/skills/self-evolution/SKILL.md".source = piBundleRoot + "/skills/self-evolution/SKILL.md";
-  home.file.".pi/agent/skills/provisioning/SKILL.md".source = piBundleRoot + "/skills/provisioning/SKILL.md";
-  home.file.".pi/agent/skills/first-boot/SKILL.md".source = piBundleRoot + "/skills/first-boot/SKILL.md";
+
 
   # ── PI subagents ──────────────────────────────────────────────────────────
   home.file.".pi/agent/agents/scout.md".source = piBundleRoot + "/agents/scout.md";
