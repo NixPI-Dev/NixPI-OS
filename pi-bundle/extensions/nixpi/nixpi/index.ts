@@ -69,7 +69,7 @@ function refreshGuardrailsBlueprint(versions: BlueprintVersions) {
 }
 
 function knowledgeDir() {
-  return join(process.env.HOME || "/tmp", "Workspace", "Knowledge");
+  return join(process.env.HOME || "/tmp", "NixPI", "wiki", "technical");
 }
 
 function evolutionDir() {

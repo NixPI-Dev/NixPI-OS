@@ -62,7 +62,7 @@ async function isGitDirty(repoDir: string) {
 }
 
 function nixpiRepoDir() {
-  return join(homeDir(), "Workspace", "NixPI");
+  return join(homeDir(), "NixPI", "config");
 }
 
 function isProtectedApplyCommand(command: string) {
@@ -215,7 +215,7 @@ function restoredContextBlock(data: SavedContext) {
 }
 
 function knowledgeDir() {
-  return join(homeDir(), "Workspace", "Knowledge");
+  return join(homeDir(), "NixPI", "wiki", "technical");
 }
 
 function personaDir() {

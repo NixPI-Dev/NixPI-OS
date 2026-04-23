@@ -394,7 +394,7 @@ in {
 
       # Seed an empty registry if none exists yet
       if [ ! -e "$wiki_root/meta/registry.json" ]; then
-        printf '[]\n' > "$wiki_root/meta/registry.json"
+        printf '{"version":1,"generatedAt":"1970-01-01T00:00:00Z","pages":[]}\n' > "$wiki_root/meta/registry.json"
       fi
     }
 
