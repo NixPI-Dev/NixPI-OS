@@ -45,7 +45,7 @@ function hashContent(content: string) {
 }
 
 function packagedGuardrailsPath() {
-  return join(__dirname, "..", "persona", "guardrails.yaml");
+  return join(agentDir(), "extensions", "llm-wiki", "guardrails.yaml");
 }
 
 function refreshGuardrailsBlueprint(versions: BlueprintVersions) {

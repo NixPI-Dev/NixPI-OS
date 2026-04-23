@@ -213,11 +213,9 @@ in {
   home.file.".pi/agent/agents/.keep".text = "";
 
   # ── PI extensions — in-house (NixPI-Dev) ─────────────────────────────────
-  home.file.".pi/agent/extensions/caveman-lite".source = piBundleRoot + "/extensions/nixpi/caveman-lite";
   home.file.".pi/agent/extensions/llm-wiki".source = llmWikiRoot;
   home.file.".pi/agent/extensions/nixpi".source = piBundleRoot + "/extensions/nixpi/nixpi";
   home.file.".pi/agent/extensions/os".source = piBundleRoot + "/extensions/nixpi/os";
-  home.file.".pi/agent/extensions/persona".source = piBundleRoot + "/extensions/nixpi/persona";
   home.file.".pi/agent/extensions/subagent".source = piBundleRoot + "/extensions/nixpi/subagent";
   home.file.".pi/agent/extensions/zz-synthetic-search".source = piBundleRoot + "/extensions/nixpi/zz-synthetic-search";
   home.file.".pi/agent/extensions/sudo-auth" = {
@@ -324,7 +322,7 @@ in {
     guardrails_path="$HOME/.pi/agent/guardrails.yaml"
     mkdir -p "$(dirname "$guardrails_path")"
     if [ ! -e "$guardrails_path" ]; then
-      cp ${piBundleRoot + "/extensions/nixpi/persona/guardrails.yaml"} "$guardrails_path"
+      cp ${llmWikiRoot + "/guardrails.yaml"} "$guardrails_path"
     fi
   '';
 
