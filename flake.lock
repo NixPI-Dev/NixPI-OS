@@ -202,11 +202,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1776944051,
-        "narHash": "sha256-+hEHqnkPoHtMFNp5bMEbcFbxknqkI9SUJCTMps0v+HA=",
+        "lastModified": 1776958323,
+        "narHash": "sha256-e/17w+j2CuSqF3vcZG0KE2sXfdXHBnyPWnS597ei2BA=",
         "owner": "NixPI-Dev",
         "repo": "NixPI-LLM-Wiki",
-        "rev": "7ffb8a9b489e64342e838b07d137fd7d8160c47d",
+        "rev": "29fc79f1035aaba2ddabc99509cc65dc778af774",
         "type": "github"
       },
       "original": {
