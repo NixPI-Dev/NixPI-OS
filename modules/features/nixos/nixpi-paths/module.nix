@@ -45,13 +45,11 @@ in {
       default = {
         nixpi-os = "${cfg.root}/repos/NixPI-OS";
         llm-wiki = "${cfg.root}/repos/NixPI-LLM-Wiki";
-        caveman-lite = "${cfg.root}/repos/NixPI-Caveman-Lite";
       };
       defaultText = lib.literalExpression ''
         {
           nixpi-os = "''${config.nixpi.root}/repos/NixPI-OS";
           llm-wiki = "''${config.nixpi.root}/repos/NixPI-LLM-Wiki";
-          caveman-lite = "''${config.nixpi.root}/repos/NixPI-Caveman-Lite";
         }
       '';
       description = ''

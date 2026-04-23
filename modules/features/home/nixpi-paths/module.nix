@@ -15,7 +15,6 @@
       default = {
         nixpi-os = "${config.nixpi.root}/repos/NixPI-OS";
         llm-wiki = "${config.nixpi.root}/repos/NixPI-LLM-Wiki";
-        caveman-lite = "${config.nixpi.root}/repos/NixPI-Caveman-Lite";
       };
       defaultText = lib.literalExpression "Derived from nixpi.root";
       description = "Absolute paths to NixPI-Dev repos. Set by NixOS nixpi-paths module.";
