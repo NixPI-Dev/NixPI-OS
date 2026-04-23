@@ -1,0 +1,1 @@
+{"version":3,"file":"parser.d.ts","sourceRoot":"","sources":["../../../src/transports/whatsapp/parser.ts"],"names":[],"mappings":"AACA,OAAO,EASL,KAAK,SAAS,EACf,MAAM,yBAAyB,CAAC;AACjC,OAAO,KAAK,EAAE,cAAc,EAAE,MAAM,qBAAqB,CAAC;AAgF1D,wBAAgB,oBAAoB,CAClC,KAAK,EAAE,SAAS,EAChB,eAAe,CAAC,EAAE,CAAC,GAAG,EAAE,MAAM,KAAK,MAAM,GAAG,SAAS,GACpD,IAAI,CAAC,cAAc,EAAE,QAAQ,CAAC,GAAG,IAAI,CA0CvC"}

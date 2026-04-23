@@ -1,0 +1,11 @@
+# Nix build outputs
+result
+result-*
+
+# Node / test artifacts
+node_modules
+coverage
+
+# Host-local private overlays / secrets
+hosts/*/pi-gateway.private.nix
+hosts/*/secrets.private.nix

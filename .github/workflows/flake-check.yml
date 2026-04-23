@@ -1,0 +1,92 @@
+name: flake-check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  flake-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Configure Magic Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Run flake checks
+        run: nix flake check --accept-flake-config
+
+  smoke-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        check:
+          - server-base-smoke
+          - desktop-workstation-smoke
+          - laptop-workstation-smoke
+          - evo-nixos-smoke
+          - pad-nixos-smoke
+          - vps-nixos-smoke
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Configure Magic Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Run smoke test ${{ matrix.check }}
+        run: nix build .#checks.x86_64-linux.${{ matrix.check }} -L
+
+  contract-checks:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        check:
+          - host-contracts
+          - host-build-contracts
+          - gaming-nvidia-contracts
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Configure Magic Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Run contract check ${{ matrix.check }}
+        run: nix build .#checks.x86_64-linux.${{ matrix.check }} -L
+
+  llm-wiki-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Configure Magic Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Run llm-wiki unit and coverage tests
+        run: nix build .#checks.x86_64-linux.llm-wiki-tests -L
+
+      - name: Run llm-wiki Home Manager starter check
+        run: nix build .#checks.x86_64-linux.llm-wiki-home -L
