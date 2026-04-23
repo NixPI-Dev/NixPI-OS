@@ -229,7 +229,6 @@ in {
   # Add home.file entries for public extensions under ./extensions/public/ here.
 
   # ── PI skills ─────────────────────────────────────────────────────────────
-  home.file.".pi/agent/skills/librarian/SKILL.md".source = "${piWebAccessRoot}/skills/librarian/SKILL.md";
   home.file.".pi/agent/skills/wiki/SKILL.md".source = piBundleRoot + "/skills/wiki/SKILL.md";
   home.file.".pi/agent/skills/wiki-migration/SKILL.md".source = piBundleRoot + "/skills/wiki-migration/SKILL.md";
   home.file.".pi/agent/skills/wiki-migration/scripts/scan.sh".source = piBundleRoot + "/skills/wiki-migration/scripts/scan.sh";
