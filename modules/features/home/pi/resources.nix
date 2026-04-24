@@ -295,9 +295,11 @@ in {
     mv "$models_path.tmp" "$models_path"
   '';
 
-  # Remove the old runtime-installed Caveman Lite git package (now declarative).
+  # Remove retired runtime-managed files that are now declarative or obsolete.
   home.activation.piCavemanLiteCleanup = lib.hm.dag.entryAfter ["writeBoundary"] ''
     rm -rf "$HOME/.pi/agent/git/github.com/NixPI-Dev/NixPI-Caveman-Lite"
+    rm -f "$HOME/.pi/agent/guardrails.yaml"
+    rm -f "$HOME/.config/environment.d/90-synthetic-api-key.conf"
   '';
 
   # ── Activation: wiki seed (idempotent — never overwrites existing files) ──
@@ -342,20 +344,25 @@ in {
         "$wiki_root/pages/archives/resources" \
         "$wiki_root/pages/archives/journal"
 
-      # Seed files — only if the destination does not already exist
+      # Seed files — only if the destination does not already exist. Prune
+      # previously seeded cross-domain files only when they still match the
+      # bundled seed exactly, so user-edited wiki pages are not removed.
       while IFS= read -r src; do
         rel="''${src#$seed/}"
+        dest="$wiki_root/$rel"
         case "$rel" in
           meta/index.md|meta/log.md)
             continue
             ;;
           pages/*)
             if ! ${pkgs.gnugrep}/bin/grep -Eq "^domain: $wiki_domain$" "$src"; then
+              if [ -e "$dest" ] && ${pkgs.diffutils}/bin/cmp -s "$src" "$dest"; then
+                rm -f "$dest"
+              fi
               continue
             fi
             ;;
         esac
-        dest="$wiki_root/$rel"
         if [ ! -e "$dest" ]; then
           mkdir -p "$(dirname "$dest")"
           cp "$src" "$dest"
