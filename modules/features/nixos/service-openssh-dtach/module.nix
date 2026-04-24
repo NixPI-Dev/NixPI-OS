@@ -23,7 +23,7 @@
             rm -f "$marker"
             mkdir -p "${socketDir}"
             echo "sudo-ask: prompting for '$cmd'"
-            dtach -A "${socketDir}/$session_name" -r winch "''${SHELL:-/run/current-system/sw/bin/bash}" -l -c "sudo $cmd; echo ''; echo '--- sudo-ask done, press Enter ---'; read -r" || true
+            dtach -A "${socketDir}/$session_name" -r winch "''${SHELL:-/run/current-system/sw/bin/bash}" -l -c "sudo $cmd; echo ''''; echo ''--- sudo-ask done, press Enter ---''; read -r" || true
           done
         fi
 
