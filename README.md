@@ -96,12 +96,11 @@ Typical consumption pattern from a private fleet config:
 
 The Pi runtime includes several capabilities:
 
-- `persona` extension — guardrails, persona layers, session context tracking
 - `os` extension — `system_health`, `nixos_update`, `systemd_control`, `schedule_reboot`
-- `sudo-auth` extension — intercepts sudo, tracks credentials, footer status
 - `nixpi` extension — `nixpi_status`, `nixpi_evolution_note`, `/nixpi status`
+- `nixpi-permissions` extension — deny-only guard for dangerous Pi shell commands
 - `subagent` extension — isolated helper agents (scout/planner/worker/reviewer)
-- restored PI skills — `os-operations`, `self-evolution`, `provisioning`, `first-boot`
+- restored PI skills — `wiki`, `os-operations`, `self-evolution`
 
 These runtime files are installed under `~/.pi/agent/` by Home Manager.
 
@@ -109,21 +108,10 @@ These runtime files are installed under `~/.pi/agent/` by Home Manager.
 
 Pi seeds a Nix-managed `~/.pi/agent/models.json` for custom providers:
 
-- `synthetic` — OpenAI-compatible, authenticated via `SYNTHETIC_API_KEY`
+- `synthetic` — OpenAI-compatible, authenticated from the configured runtime secret path
 - `llama` — local llama.cpp endpoint on `evo-nixos`
 
-Quick shell setup before launching `pi`:
-
-```bash
-export SYNTHETIC_API_KEY=your_synthetic_key
-pi
-```
-
-Preferred persistent setup:
-
-- store the key in `~/.config/nixos-secrets/synthetic-api-key`
-- open a new shell or re-login
-- launch `pi`
+Maintained hosts should set `home-manager.users.<name>.pi.syntheticApiKeyFile` to a runtime secret such as `/run/secrets/synthetic_api_key`.
 
 This keeps the key out of the Nix store while preserving it across rebuilds.
 

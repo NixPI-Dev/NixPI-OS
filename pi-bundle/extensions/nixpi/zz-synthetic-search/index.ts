@@ -6,11 +6,9 @@ import { randomUUID } from "node:crypto";
 
 const SYNTHETIC_SEARCH_URL = "https://api.synthetic.new/v2/search";
 const SEARCH_CACHE_DIR = join(process.env.HOME || "/tmp", ".pi", "agent", "synthetic-search-cache");
-const SYNTHETIC_API_KEY_ENV = "SYNTHETIC_API_KEY";
 const SYNTHETIC_API_KEY_FILE_ENV = "PI_SYNTHETIC_API_KEY_FILE";
 const DEFAULT_SYNTHETIC_API_KEY_FILES = [
   "/run/secrets/synthetic_api_key",
-  join(process.env.HOME || "/tmp", ".config", "nixos-secrets", "synthetic-api-key"),
 ];
 
 const WebSearchParams = Type.Object({
@@ -64,12 +62,7 @@ function readSyntheticApiKey(): string {
     if (apiKey) return apiKey;
   }
 
-  const apiKey = process.env[SYNTHETIC_API_KEY_ENV]?.trim();
-  if (apiKey) return apiKey;
-
-  throw new Error(
-    `Synthetic API key not available in ${SYNTHETIC_API_KEY_ENV} or ${SYNTHETIC_API_KEY_FILE_ENV}`,
-  );
+  throw new Error(`Synthetic API key not available via ${SYNTHETIC_API_KEY_FILE_ENV}`);
 }
 
 function ensureCacheDir(): void {

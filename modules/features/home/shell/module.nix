@@ -20,12 +20,6 @@
     # wiki-technical() and wiki-personal() switch the active wiki context.
     # The llm-wiki extension also receives both roots via dedicated env vars.
     initExtra = ''
-      if [ -f "${config.pi.syntheticApiKeyFile}" ] && {
-        [ -z "''${SYNTHETIC_API_KEY:-}" ] || [ "''${SYNTHETIC_API_KEY:-}" = "PLACEHOLDER_SYNTHETIC_KEY" ]
-      }; then
-        export SYNTHETIC_API_KEY="$(tr -d '[:space:]' < "${config.pi.syntheticApiKeyFile}")"
-      fi
-
       wiki-technical() {
         export PI_LLM_WIKI_DIR="${config.nixpi.wiki.technical}"
         echo "Wiki context: technical ($PI_LLM_WIKI_DIR)"

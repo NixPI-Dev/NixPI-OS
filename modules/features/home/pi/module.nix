@@ -67,12 +67,11 @@
 
     syntheticApiKeyFile = lib.mkOption {
       type = lib.types.str;
-      default = "$HOME/.config/nixos-secrets/synthetic-api-key";
+      default = "/run/secrets/synthetic_api_key";
       description = ''
         Runtime file path containing the Synthetic API key.
-        Defaults to the legacy per-user secret path, but maintained hosts can
-        point this directly at a sops-nix managed runtime file such as
-        /run/secrets/synthetic_api_key.
+        Maintained hosts should provide this via sops-nix or another runtime
+        secret mechanism so the key never enters the Nix store.
       '';
     };
   };

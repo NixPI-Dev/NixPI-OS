@@ -215,6 +215,7 @@ in {
   # ── PI extensions — in-house (NixPI-Dev) ─────────────────────────────────
   home.file.".pi/agent/extensions/llm-wiki".source = llmWikiRoot;
   home.file.".pi/agent/extensions/nixpi".source = piBundleRoot + "/extensions/nixpi/nixpi";
+  home.file.".pi/agent/extensions/nixpi-permissions".source = piBundleRoot + "/extensions/nixpi/nixpi-permissions";
   home.file.".pi/agent/extensions/os".source = piBundleRoot + "/extensions/nixpi/os";
   home.file.".pi/agent/extensions/subagent".source = piBundleRoot + "/extensions/nixpi/subagent";
   home.file.".pi/agent/extensions/zz-synthetic-search".source = piBundleRoot + "/extensions/nixpi/zz-synthetic-search";
@@ -240,31 +241,6 @@ in {
   home.sessionVariables.PI_LLM_WIKI_ROOTS = "technical:${technicalWikiDir},personal:${personalWikiDir}";
   home.sessionVariables.PI_LLM_WIKI_ALLOWED_DOMAINS = "technical,personal";
   home.sessionVariables.PI_SYNTHETIC_API_KEY_FILE = config.pi.syntheticApiKeyFile;
-
-  # ── Synthetic API key from runtime secret file ──────────────────────────
-  # Keep the secret outside the Nix store. Activation mirrors it into a
-  # user-writable environment.d file so rebuilt hosts keep the setting.
-  home.activation.syntheticApiKey = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    keyFile="${config.pi.syntheticApiKeyFile}"
-    envdDir="$HOME/.config/environment.d"
-    envd="$envdDir/90-synthetic-api-key.conf"
-
-    mkdir -p "$envdDir"
-
-    if [ -f "$keyFile" ]; then
-      key=$(tr -d '[:space:]' < "$keyFile")
-      if [ -n "$key" ]; then
-        tmp=$(mktemp "$envd.XXXXXX")
-        printf 'SYNTHETIC_API_KEY=%s\n' "$key" > "$tmp"
-        chmod 600 "$tmp"
-        mv "$tmp" "$envd"
-      else
-        rm -f "$envd"
-      fi
-    else
-      rm -f "$envd"
-    fi
-  '';
 
   # ── Activation: PI web-search config (once) ───────────────────────────────
   home.activation.piWebAccessStarter = lib.hm.dag.entryAfter ["writeBoundary"] ''
