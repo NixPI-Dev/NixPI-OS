@@ -24,9 +24,6 @@
     zz-synthetic-search = piBundleRoot + "/extensions/nixpi/zz-synthetic-search";
   };
 
-  mkBundledPiExtension = name: source:
-    lib.nameValuePair ".pi/agent/extensions/${name}" {inherit source;};
-
   starterConfig = builtins.toJSON {
     provider = "exa";
     workflow = "summary-review";
@@ -178,8 +175,6 @@
 
   piSettingsJson = pkgs.writeText "pi-settings.json" (builtins.toJSON piSettings);
 in {
-  home.file = builtins.listToAttrs (lib.mapAttrsToList mkBundledPiExtension bundledPiExtensions);
-
   # ── qmd — local retrieval layer ───────────────────────────────────────────
   home.file.".config/qmd/index.yml".text = ''
     global_context: >-
@@ -224,7 +219,10 @@ in {
   home.file.".pi/agent/agents/.keep".text = "";
 
   # ── PI extensions — in-house (NixPI-Dev) ─────────────────────────────────
-  # Installed from bundledPiExtensions above.
+  home.file.".pi/agent/extensions/nixpi".source = bundledPiExtensions.nixpi;
+  home.file.".pi/agent/extensions/nixpi-permissions".source = bundledPiExtensions.nixpi-permissions;
+  home.file.".pi/agent/extensions/subagent".source = bundledPiExtensions.subagent;
+  home.file.".pi/agent/extensions/zz-synthetic-search".source = bundledPiExtensions.zz-synthetic-search;
 
   # ── PI extensions — public/third-party (future) ──────────────────────────
   # Add home.file entries for public extensions under ./extensions/public/ here.
@@ -304,6 +302,7 @@ in {
   # Remove retired runtime-managed files that are now declarative or obsolete.
   home.activation.piCavemanLiteCleanup = lib.hm.dag.entryAfter ["writeBoundary"] ''
     rm -rf "$HOME/.pi/agent/git/github.com/NixPI-Dev/NixPI-Caveman-Lite"
+    rm -f "$HOME/.pi/agent/extensions/llm-wiki"
     rm -f "$HOME/.pi/agent/guardrails.yaml"
     rm -f "$HOME/.config/environment.d/90-synthetic-api-key.conf"
   '';
