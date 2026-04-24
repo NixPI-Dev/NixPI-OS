@@ -44,44 +44,26 @@ function shellEscape(value: string) {
   return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
-// ── sudo-auth integration ──────────────────────────────────────────────────
-// The sudo-auth extension exposes ensureSudo via a shared event.
-// We lazily resolve it so we don't depend on load order.
+// ── sudo helper ────────────────────────────────────────────────────────────
+// Keep the flow simple: probe sudo -n; if inactive, ask the user to run
+// `!sudo -v` in another shell and then confirm.
 
-let _sudoAuth: { ensureSudo: (ctx: any, signal?: AbortSignal) => Promise<boolean> } | null = null;
-
-function getSudoAuth(pi: ExtensionAPI) {
-  if (_sudoAuth) return _sudoAuth;
-  try {
-    _sudoAuth = pi.events.emit("pi-sudo-auth:request") as any;
-  } catch {
-    _sudoAuth = null;
-  }
-  return _sudoAuth;
-}
-
-async function ensureSudo(pi: ExtensionAPI, ctx: any, signal?: AbortSignal): Promise<boolean> {
-  const auth = getSudoAuth(pi);
-  if (auth?.ensureSudo) {
-    return auth.ensureSudo(ctx, signal);
-  }
-  // Fallback: direct probe without the nice UX
+async function ensureSudo(_pi: ExtensionAPI, ctx: any, signal?: AbortSignal): Promise<boolean> {
   try {
     await promisify(execFile)("sudo", ["-n", "true"], { signal, timeout: 10_000 });
     return true;
   } catch {
     if (!ctx.hasUI) return false;
-    return ctx.ui.confirm("Privilege Required", "Run 'sudo -v' in another terminal, then confirm here.");
+    return ctx.ui.confirm("Privilege Required", "Run `!sudo -v` in pi shell or `sudo -v` in another terminal, then confirm here.");
   }
 }
 
 // ── Run a privileged command via sudo -n ───────────────────────────────────
-// This replaces the old privilegedTmuxHandoff. Instead of opening a tmux
-// pane, we ensure sudo credentials and then run the command directly.
+// We ensure sudo credentials and then run the command directly.
 // Output streams back to PI through the normal bash execution path.
 
 async function runPrivileged(
-  pi: ExtensionAPI,
+  _pi: ExtensionAPI,
   ctx: any,
   signal: AbortSignal | undefined,
   command: string,
@@ -92,7 +74,7 @@ async function runPrivileged(
     return { content: [{ type: "text" as const, text: denied }], details: { ok: false }, isError: true };
   }
 
-  const hasSudo = await ensureSudo(pi, ctx, signal);
+  const hasSudo = await ensureSudo(_pi, ctx, signal);
   if (!hasSudo) {
     return {
       content: [{ type: "text" as const, text: `Cancelled: sudo authentication not available for ${confirmationLabel}.` }],

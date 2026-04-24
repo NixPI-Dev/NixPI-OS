@@ -218,10 +218,6 @@ in {
   home.file.".pi/agent/extensions/os".source = piBundleRoot + "/extensions/nixpi/os";
   home.file.".pi/agent/extensions/subagent".source = piBundleRoot + "/extensions/nixpi/subagent";
   home.file.".pi/agent/extensions/zz-synthetic-search".source = piBundleRoot + "/extensions/nixpi/zz-synthetic-search";
-  home.file.".pi/agent/extensions/sudo-auth" = {
-    source = piBundleRoot + "/extensions/nixpi/sudo-auth";
-    force = true;
-  };
 
   # ── PI extensions — public/third-party (future) ──────────────────────────
   # Add home.file entries for public extensions under ./extensions/public/ here.
@@ -330,11 +326,12 @@ in {
     fi
   '';
 
-  # Remove the older privilege extensions replaced by sudo-auth.
+  # Remove obsolete privilege helper extensions.
   home.activation.piSudoCleanup = lib.hm.dag.entryAfter ["writeBoundary"] ''
     rm -rf "$HOME/.pi/agent/extensions/sudo-prompt"
     rm -rf "$HOME/.pi/agent/extensions/sudo-handoff"
     rm -rf "$HOME/.pi/agent/extensions/tmux-manager"
+    rm -rf "$HOME/.pi/agent/extensions/sudo-auth"
   '';
 
   # Remove the old runtime-installed Caveman Lite git package (now declarative).
