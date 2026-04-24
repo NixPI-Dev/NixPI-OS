@@ -16,6 +16,7 @@ export class Router {
     private readonly policy: Policy,
     private readonly maxReplyChars: number,
     private readonly maxReplyChunks: number,
+    private readonly whatsappModelPolicy: { model?: string; allowedModels?: string[] } = {},
   ) {}
 
   handleMessage(msg: InboundMessage): Promise<RouterResult> {
@@ -51,6 +52,7 @@ export class Router {
       const reply = await this.pi.prompt(personalRoute.message, existing?.sessionPath ?? null, {
         systemPromptAddendum: personalRoute.systemPromptAddendum,
         env: this.getPiEnvForMessage(msg),
+        model: this.getPiModelForMessage(msg),
       });
       this.store.upsertChatSession(msg.chatId, msg.senderId, reply.sessionPath);
 
@@ -120,10 +122,37 @@ export class Router {
     if (msg.channel !== "whatsapp") return {};
 
     const personalRoot = process.env.PI_LLM_WIKI_DIR_PERSONAL;
+    const allowedModels = this.normalizedAllowedSyntheticModelIds().join(",");
     return {
       PI_GATEWAY_PROFILE: "whatsapp-personal",
       PI_LLM_WIKI_ALLOWED_DOMAINS: "personal",
+      PI_SYNTHETIC_ALLOWED_MODELS: allowedModels,
       ...(personalRoot ? { PI_LLM_WIKI_DIR: personalRoot } : {}),
     };
+  }
+
+  private getPiModelForMessage(msg: InboundMessage): string | undefined {
+    if (msg.channel !== "whatsapp" || !this.whatsappModelPolicy.model) return undefined;
+    return this.toSyntheticModelArg(this.whatsappModelPolicy.model);
+  }
+
+  private normalizedAllowedSyntheticModelIds(): string[] {
+    const configured = this.whatsappModelPolicy.allowedModels ?? [];
+    const candidates = configured.length > 0
+      ? configured
+      : this.whatsappModelPolicy.model
+        ? [this.whatsappModelPolicy.model]
+        : [];
+    return [...new Set(candidates.map((model) => this.toSyntheticModelId(model)).filter(Boolean))];
+  }
+
+  private toSyntheticModelArg(model: string): string {
+    const id = this.toSyntheticModelId(model);
+    return `synthetic/${id}`;
+  }
+
+  private toSyntheticModelId(model: string): string {
+    const trimmed = model.trim();
+    return trimmed.startsWith("synthetic/") ? trimmed.slice("synthetic/".length) : trimmed;
   }
 }

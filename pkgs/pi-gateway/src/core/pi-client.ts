@@ -8,6 +8,7 @@ const execFileAsync = promisify(execFile);
 type PromptOptions = {
   systemPromptAddendum?: string;
   env?: NodeJS.ProcessEnv;
+  model?: string;
 };
 
 /** Wraps the pi CLI in print mode for non-interactive gateway use. */
@@ -34,6 +35,7 @@ export class PiClient {
       "--system-prompt", this.buildSystemPrompt(options.systemPromptAddendum),
       message,
     ];
+    if (options.model) args.splice(0, 0, "--model", options.model);
 
     console.log(`pi: prompt start session=${resolved} chars=${message.length}`);
 

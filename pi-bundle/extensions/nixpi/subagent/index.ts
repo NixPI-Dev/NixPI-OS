@@ -408,6 +408,8 @@ const SubagentParams = Type.Object({
 });
 
 export default function subagentExtension(pi: ExtensionAPI) {
+  if (process.env.PI_GATEWAY_PROFILE === "whatsapp-personal") return;
+
   pi.registerCommand("agents", {
     description: "List available subagents. Usage: /agents [user|project|both]",
     handler: async (args, ctx) => {

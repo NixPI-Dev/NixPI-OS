@@ -41,7 +41,17 @@ async function main(): Promise<void> {
     config.pi.timeoutMs,
   );
   const policy = new Policy();
-  const router = new Router(store, pi, policy, config.gateway.maxReplyChars, config.gateway.maxReplyChunks);
+  const router = new Router(
+    store,
+    pi,
+    policy,
+    config.gateway.maxReplyChars,
+    config.gateway.maxReplyChunks,
+    {
+      model: config.transports.whatsapp?.model,
+      allowedModels: config.transports.whatsapp?.allowedModels,
+    },
+  );
 
   await pi.healthCheck();
   console.log("pi health check OK");

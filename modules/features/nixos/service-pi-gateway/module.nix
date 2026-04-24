@@ -6,6 +6,7 @@
 }: let
   cfg = config.services.pi-gateway;
   gatewayPackage = pkgs.callPackage ../../../../pkgs/pi-gateway {};
+  defaultWhatsAppModel = "hf:zai-org/GLM-4.7-Flash";
 
   gatewayConfig = pkgs.writeText "nixpi-gateway.yml" (
     lib.generators.toYAML {} {
@@ -38,6 +39,8 @@
             adminNumbers = cfg.whatsapp.adminNumbers;
             directMessagesOnly = cfg.whatsapp.directMessagesOnly;
             sessionDataPath = cfg.whatsapp.sessionDataPath;
+            model = cfg.whatsapp.model;
+            allowedModels = cfg.whatsapp.allowedModels;
           };
         };
     }
@@ -181,6 +184,31 @@ in {
         default = "${cfg.stateDir}/whatsapp/auth";
         description = "Directory used by the WhatsApp transport to persist Baileys auth state and QR artifacts.";
       };
+
+      model = lib.mkOption {
+        type = lib.types.str;
+        default = defaultWhatsAppModel;
+        example = "hf:zai-org/GLM-4.7-Flash";
+        description = ''
+          Synthetic model used for every WhatsApp Pi prompt.
+          Accepts either a bare Synthetic model id such as
+          `hf:zai-org/GLM-4.7-Flash` or the full Pi model selector form
+          `synthetic/hf:zai-org/GLM-4.7-Flash`.
+        '';
+      };
+
+      allowedModels = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [defaultWhatsAppModel];
+        example = [
+          "hf:zai-org/GLM-4.7-Flash"
+          "hf:deepseek-ai/DeepSeek-V3.2"
+        ];
+        description = ''
+          Synthetic model ids exposed to WhatsApp Pi sessions. The selected
+          `services.pi-gateway.whatsapp.model` must be in this list.
+        '';
+      };
     };
   };
 
@@ -209,6 +237,17 @@ in {
       {
         assertion = cfg.whatsapp.enable -> cfg.whatsapp.trustedNumbers != [];
         message = "services.pi-gateway.whatsapp.trustedNumbers must not be empty when whatsapp transport is enabled.";
+      }
+      {
+        assertion =
+          cfg.whatsapp.enable
+          -> builtins.elem cfg.whatsapp.model cfg.whatsapp.allowedModels
+          || builtins.elem "synthetic/${cfg.whatsapp.model}" cfg.whatsapp.allowedModels
+          || (
+            lib.hasPrefix "synthetic/" cfg.whatsapp.model
+            && builtins.elem (lib.removePrefix "synthetic/" cfg.whatsapp.model) cfg.whatsapp.allowedModels
+          );
+        message = "services.pi-gateway.whatsapp.model must be included in services.pi-gateway.whatsapp.allowedModels.";
       }
     ];
 

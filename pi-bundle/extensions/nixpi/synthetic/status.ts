@@ -1,3 +1,4 @@
+import { allowedSyntheticModelIds } from "./config.ts";
 import { MODELS } from "./models.ts";
 
 export function buildSyntheticStatusLines(apiKey: string | null): string[] {
@@ -13,7 +14,10 @@ export function buildSyntheticStatusLines(apiKey: string | null): string[] {
 
   lines.push("");
   lines.push("Models:");
-  for (const model of MODELS) {
+  const allowedIds = allowedSyntheticModelIds();
+  const models = allowedIds ? MODELS.filter((model) => allowedIds.includes(model.id)) : MODELS;
+  if (allowedIds) lines.push(`Allowlist: ${allowedIds.join(", ")}`);
+  for (const model of models) {
     const vision = model.input.includes("image") ? " [vision]" : "";
     const thinking = model.reasoning ? " [reasoning]" : "";
     const cost = `$${model.cost.input}/${model.cost.output}`;

@@ -28,3 +28,28 @@ console.log(process.env.PI_GATEWAY_PROFILE || "");
     rmSync(tmp, { recursive: true, force: true });
   }
 });
+
+test("PiClient passes a model override to the Pi process", async () => {
+  const tmp = mkdtempSync(path.join(os.tmpdir(), "pi-gateway-pi-client-model-"));
+  try {
+    const fakePi = path.join(tmp, "fake-pi.mjs");
+    writeFileSync(
+      fakePi,
+      `#!${process.execPath}
+const index = process.argv.indexOf("--model");
+console.log(index === -1 ? "" : process.argv[index + 1]);
+`,
+      "utf-8",
+    );
+    chmodSync(fakePi, 0o755);
+
+    const client = new PiClient(fakePi, path.join(tmp, "sessions"), tmp, 10_000);
+    const reply = await client.prompt("hello", null, {
+      model: "synthetic/hf:zai-org/GLM-4.7-Flash",
+    });
+
+    assert.equal(reply.text, "synthetic/hf:zai-org/GLM-4.7-Flash");
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+});
