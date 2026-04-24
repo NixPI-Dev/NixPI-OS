@@ -45,7 +45,7 @@ function hashContent(content: string) {
 }
 
 function packagedGuardrailsPath() {
-  return join(agentDir(), "extensions", "llm-wiki", "guardrails.yaml");
+  return join(agentDir(), "extensions", "nixpi", "guardrails.yaml");
 }
 
 function refreshGuardrailsBlueprint(versions: BlueprintVersions) {

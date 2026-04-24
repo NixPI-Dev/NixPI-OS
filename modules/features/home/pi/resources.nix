@@ -339,7 +339,7 @@ in {
     guardrails_path="$HOME/.pi/agent/guardrails.yaml"
     mkdir -p "$(dirname "$guardrails_path")"
     if [ ! -e "$guardrails_path" ]; then
-      cp ${llmWikiRoot + "/guardrails.yaml"} "$guardrails_path"
+      cp ${piBundleRoot + "/extensions/nixpi/nixpi/guardrails.yaml"} "$guardrails_path"
     fi
   '';
 

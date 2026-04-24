@@ -1,0 +1,58 @@
+# PI Guardrails Policy
+# Seeded to ~/.pi/agent/guardrails.yaml and enforced by the llm-wiki extension.
+#
+# elevate: never  — always blocked, even with active sudo credentials
+# elevate: sudo   — blocked unless sudo credentials are active (sudo -v)
+
+rules:
+  - tool: bash
+    action: block
+    patterns:
+      # ── Never elevate: catastrophic, no legitimate automated use ──────
+      - pattern: '\brm\s+-rf\s+/'
+        label: "rm -rf /"
+        elevate: never
+      - pattern: '\bmkfs\b'
+        label: "mkfs (filesystem format)"
+        elevate: never
+      - pattern: '\bdd\b.*\bof=/dev/'
+        label: "dd to device"
+        elevate: never
+      - pattern: ':\(\)\s*\{'
+        label: "fork bomb"
+        elevate: never
+      - pattern: '>\s*/dev/[sh]d[a-z]'
+        label: "write to block device"
+        elevate: never
+      - pattern: '\bchmod\s+[0-7]*777\b'
+        label: "chmod 777"
+        elevate: never
+
+      # ── Sudo-elevatable: dangerous but valid with human intent ────────
+      - pattern: '\bshutdown\b'
+        label: "shutdown"
+        elevate: sudo
+      - pattern: '\breboot\b'
+        label: "reboot"
+        elevate: sudo
+      - pattern: '(^|[^a-zA-Z0-9_])eval([^a-zA-Z0-9_]|$)'
+        label: "eval"
+        elevate: sudo
+      - pattern: '`[^`]+`'
+        label: "backtick command substitution"
+        elevate: sudo
+      - pattern: '\$\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\)'
+        label: "$() command substitution"
+        elevate: sudo
+      - pattern: '\|\s*(bash|sh|zsh|dash)\b'
+        label: "pipe to shell"
+        elevate: sudo
+      - pattern: '\bcurl\b.*\|\s*(bash|sh)'
+        label: "curl pipe to shell"
+        elevate: sudo
+      - pattern: '\bwget\b.*\|\s*(bash|sh)'
+        label: "wget pipe to shell"
+        elevate: sudo
+      - pattern: '\bchown\s+.*\s+/'
+        label: "chown root paths"
+        elevate: sudo
