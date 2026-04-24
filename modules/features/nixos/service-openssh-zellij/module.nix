@@ -36,11 +36,20 @@ in {
         to get a plain bash shell instead.
       '';
     };
+
+    excludeUsers = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = ["git"];
+      description = ''
+        Users excluded from the zellij ForceCommand.
+        These users keep their default shell (e.g. git-shell for the git user).
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
     services.openssh.extraConfig = ''
-      Match User *
+      Match User *,!${lib.concatStringsSep ",!" cfg.excludeUsers}
         ForceCommand ${zellijShellScript}/bin/zellij-ssh-shell
     '';
   };
