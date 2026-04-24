@@ -188,3 +188,4 @@ nix flake check --accept-flake-config  # run all checks
 - shared user config lives in Home Manager
 - machine-specific overrides should stay small and obvious
 - repo-specific binary cache settings live in `flake.nix` via `nixConfig`
+
