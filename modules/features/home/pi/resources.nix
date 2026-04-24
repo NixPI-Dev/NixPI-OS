@@ -240,11 +240,11 @@ in {
   home.sessionVariables.PI_LLM_WIKI_ROOTS = "technical:${technicalWikiDir},personal:${personalWikiDir}";
   home.sessionVariables.PI_LLM_WIKI_ALLOWED_DOMAINS = "technical,personal";
 
-  # ── Synthetic API key from local secret file ────────────────────────────
+  # ── Synthetic API key from runtime secret file ──────────────────────────
   # Keep the secret outside the Nix store. Activation mirrors it into a
   # user-writable environment.d file so rebuilt hosts keep the setting.
   home.activation.syntheticApiKey = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    keyFile="$HOME/.config/nixos-secrets/synthetic-api-key"
+    keyFile="${config.pi.syntheticApiKeyFile}"
     envdDir="$HOME/.config/environment.d"
     envd="$envdDir/90-synthetic-api-key.conf"
 

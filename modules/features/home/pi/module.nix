@@ -64,6 +64,17 @@
         Computed from nixpiExtensions and publicExtensions.
       '';
     };
+
+    syntheticApiKeyFile = lib.mkOption {
+      type = lib.types.str;
+      default = "$HOME/.config/nixos-secrets/synthetic-api-key";
+      description = ''
+        Runtime file path containing the Synthetic API key.
+        Defaults to the legacy per-user secret path, but maintained hosts can
+        point this directly at a sops-nix managed runtime file such as
+        /run/secrets/synthetic_api_key.
+      '';
+    };
   };
 
   imports = [

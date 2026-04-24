@@ -20,10 +20,10 @@
     # wiki-technical() and wiki-personal() switch the active wiki context.
     # The llm-wiki extension also receives both roots via dedicated env vars.
     initExtra = ''
-      if [ -f "$HOME/.config/nixos-secrets/synthetic-api-key" ] && {
+      if [ -f "${config.pi.syntheticApiKeyFile}" ] && {
         [ -z "''${SYNTHETIC_API_KEY:-}" ] || [ "''${SYNTHETIC_API_KEY:-}" = "PLACEHOLDER_SYNTHETIC_KEY" ]
       }; then
-        export SYNTHETIC_API_KEY="$(tr -d '[:space:]' < "$HOME/.config/nixos-secrets/synthetic-api-key")"
+        export SYNTHETIC_API_KEY="$(tr -d '[:space:]' < "${config.pi.syntheticApiKeyFile}")"
       fi
 
       wiki-technical() {
