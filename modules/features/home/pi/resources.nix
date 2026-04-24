@@ -23,31 +23,6 @@
     zz-synthetic-search = piBundleRoot + "/extensions/nixpi/zz-synthetic-search";
   };
 
-  starterConfig = builtins.toJSON {
-    provider = "exa";
-    workflow = "summary-review";
-    curatorTimeoutSeconds = 20;
-    githubClone = {
-      enabled = true;
-      maxRepoSizeMB = 350;
-      cloneTimeoutSeconds = 30;
-      clonePath = "/tmp/pi-github-repos";
-    };
-    youtube = {
-      enabled = true;
-      preferredModel = "gemini-3-flash-preview";
-    };
-    video = {
-      enabled = true;
-      preferredModel = "gemini-3-flash-preview";
-      maxSizeMB = 50;
-    };
-    shortcuts = {
-      curate = "ctrl+shift+s";
-      activity = "ctrl+shift+w";
-    };
-  };
-
   # ── Local llama models — set per-host via pi.llamaModels ─────────────────
   llamaModels = config.pi.llamaModels;
   packageSources = config.pi.packageSources;
@@ -156,23 +131,103 @@
   piModelsBaseJson = pkgs.writeText "pi-models-base.json" (builtins.toJSON piModelsBase);
 
   # ── PI settings.json — fully declarative ──────────────────────────────────
-  piSettings = {
-    lastChangelogVersion = "0.67.68";
-    defaultThinkingLevel = "high";
-    hideThinkingBlock = true;
-    defaultProvider = "synthetic";
-    defaultModel = "hf:zai-org/GLM-5.1";
-    enabledModels = syntheticModelIds ++ llamaModelIds;
-    packages = packageSources;
-    mcpServers = {
-      qmd = {
-        command = "qmd";
-        args = ["mcp"];
+  piSettings =
+    {
+      lastChangelogVersion = "0.67.68";
+      defaultThinkingLevel = "high";
+      hideThinkingBlock = true;
+      defaultProvider = "synthetic";
+      defaultModel = "hf:zai-org/GLM-5.1";
+      enabledModels = syntheticModelIds ++ llamaModelIds;
+      packages = packageSources;
+      mcpServers = {
+        qmd = {
+          command = "qmd";
+          args = ["mcp"];
+        };
       };
-    };
-  };
+    }
+    // config.pi.settingsOverrides;
 
   piSettingsJson = pkgs.writeText "pi-settings.json" (builtins.toJSON piSettings);
+
+  wikiSeedCommand = pkgs.writeShellApplication {
+    name = "nixpi-wiki-seed";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.diffutils
+      pkgs.findutils
+      pkgs.gnugrep
+    ];
+    text = ''
+      set -euo pipefail
+
+      seed=${lib.escapeShellArg (toString wikiSeed)}
+
+      seed_wiki_root() {
+        wiki_root="$1"
+        wiki_domain="$2"
+
+        mkdir -p \
+          "$wiki_root/.stfolder" \
+          "$wiki_root/raw" \
+          "$wiki_root/meta" \
+          "$wiki_root/schemas" \
+          "$wiki_root/templates/markdown" \
+          "$wiki_root/pages/home" \
+          "$wiki_root/pages/planner/tasks" \
+          "$wiki_root/pages/planner/calendar" \
+          "$wiki_root/pages/planner/reminders" \
+          "$wiki_root/pages/planner/reviews" \
+          "$wiki_root/pages/projects" \
+          "$wiki_root/pages/projects/nixpi/persona" \
+          "$wiki_root/pages/projects/nixpi/evolution" \
+          "$wiki_root/pages/areas" \
+          "$wiki_root/pages/resources/knowledge" \
+          "$wiki_root/pages/resources/people" \
+          "$wiki_root/pages/resources/technical" \
+          "$wiki_root/pages/resources/personal" \
+          "$wiki_root/pages/sources" \
+          "$wiki_root/pages/journal/daily" \
+          "$wiki_root/pages/journal/weekly" \
+          "$wiki_root/pages/journal/monthly" \
+          "$wiki_root/pages/archives/planner" \
+          "$wiki_root/pages/archives/projects" \
+          "$wiki_root/pages/archives/areas" \
+          "$wiki_root/pages/archives/resources" \
+          "$wiki_root/pages/archives/journal"
+
+        while IFS= read -r src; do
+          rel="''${src#"$seed"/}"
+          dest="$wiki_root/$rel"
+          case "$rel" in
+            meta/index.md|meta/log.md)
+              continue
+              ;;
+            pages/*)
+              if ! grep -Eq "^domain: $wiki_domain$" "$src"; then
+                if [ -e "$dest" ] && cmp -s "$src" "$dest"; then
+                  rm -f "$dest"
+                fi
+                continue
+              fi
+              ;;
+          esac
+          if [ ! -e "$dest" ]; then
+            mkdir -p "$(dirname "$dest")"
+            cp "$src" "$dest"
+          fi
+        done < <(find "$seed" -type f)
+
+        if [ ! -e "$wiki_root/meta/registry.json" ]; then
+          printf '{"version":1,"generatedAt":"1970-01-01T00:00:00Z","pages":[]}\n' > "$wiki_root/meta/registry.json"
+        fi
+      }
+
+      seed_wiki_root ${lib.escapeShellArg technicalWikiDir} technical
+      seed_wiki_root ${lib.escapeShellArg personalWikiDir} personal
+    '';
+  };
 in {
   # ── qmd — local retrieval layer ───────────────────────────────────────────
   home.file.".config/qmd/index.yml".text = ''
@@ -236,6 +291,11 @@ in {
   home.file.".pi/agent/agents/worker.md".source = piBundleRoot + "/agents/worker.md";
   home.file.".pi/agent/agents/reviewer.md".source = piBundleRoot + "/agents/reviewer.md";
 
+  # ── PI generated config ──────────────────────────────────────────────────
+  home.file.".pi/web-search.json".text = "${builtins.toJSON config.pi.webAccessConfig}\n";
+  home.file.".pi/agent/settings.json".source = piSettingsJson;
+  home.file.".pi/agent/models.json".source = piModelsBaseJson;
+
   # ── Session variables ─────────────────────────────────────────────────────
   home.sessionVariables.PI_LLM_WIKI_DIR = defaultWikiDir;
   home.sessionVariables.PI_LLM_WIKI_DIR_TECHNICAL = technicalWikiDir;
@@ -244,144 +304,25 @@ in {
   home.sessionVariables.PI_LLM_WIKI_ALLOWED_DOMAINS = "technical,personal";
   home.sessionVariables.PI_SYNTHETIC_API_KEY_FILE = config.pi.syntheticApiKeyFile;
 
-  # ── Activation: PI web-search config (once) ───────────────────────────────
-  home.activation.piWebAccessStarter = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    config_path="$HOME/.pi/web-search.json"
-    if [ ! -e "$config_path" ]; then
-      mkdir -p "$HOME/.pi"
-      printf '%s\n' '${starterConfig}' > "$config_path"
-    fi
-  '';
-
-  # ── Activation: PI settings — fully declarative ───────────────────────────
-  #
-  # settings.json is now regenerated from Nix config on every activation.
-  # This ensures enabledModels, defaultModel, and mcpServers stay in sync
-  # with the NixOS configuration.  User-only prefs (e.g. keybindings, UI
-  # state) are preserved by merging the declarative fields into the
-  # existing file rather than overwriting it entirely.
-  home.activation.piSettings = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    settings_path="$HOME/.pi/agent/settings.json"
-    mkdir -p "$(dirname "$settings_path")"
-
-    if [ ! -e "$settings_path" ]; then
-      # Fresh install — write the full declarative settings
-      cp ${piSettingsJson} "$settings_path"
-      chmod 0600 "$settings_path"
-    else
-      # Existing settings — merge declarative fields, preserving user prefs
-      # like keybindings, hideThinkingBlock, etc. Package sources remain
-      # declarative so PI extension installs can be pinned from Nix config.
-      ${pkgs.jq}/bin/jq -n \
-        --slurpfile decl ${piSettingsJson} \
-        --slurpfile cur "$settings_path" \
-        '$decl[0] as $d | $cur[0] as $c |
-         $c * {
-           enabledModels: $d.enabledModels,
-           defaultProvider: $d.defaultProvider,
-           defaultModel: $d.defaultModel,
-           packages: $d.packages,
-           mcpServers: ($c.mcpServers // {} | . + $d.mcpServers)
-         }' \
-        > "$settings_path.tmp" && mv "$settings_path.tmp" "$settings_path"
-    fi
-  '';
-
-  # ── Activation: Pi custom providers/models (declarative) ─────────────────
-  home.activation.piModels = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    models_path="$HOME/.pi/agent/models.json"
-    mkdir -p "$(dirname "$models_path")"
-
-    cp ${piModelsBaseJson} "$models_path.tmp"
-    chmod 0600 "$models_path.tmp"
-    mv "$models_path.tmp" "$models_path"
-  '';
-
   # Remove retired runtime-managed files that are now declarative or obsolete.
-  home.activation.piCavemanLiteCleanup = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    rm -rf "$HOME/.pi/agent/git/github.com/NixPI-Dev/NixPI-Caveman-Lite"
-    rm -f "$HOME/.pi/agent/extensions/llm-wiki"
-    rm -f "$HOME/.pi/agent/extensions/nixpi-permissions"
-    rm -f "$HOME/.pi/agent/guardrails.yaml"
-    rm -f "$HOME/.config/environment.d/90-synthetic-api-key.conf"
-  '';
+  systemd.user.tmpfiles.rules = [
+    "R %h/.pi/agent/git/github.com/NixPI-Dev/NixPI-Caveman-Lite - - - - -"
+    "R %h/.pi/agent/extensions/llm-wiki - - - - -"
+    "R %h/.pi/agent/extensions/nixpi-permissions - - - - -"
+    "R %h/.pi/agent/guardrails.yaml - - - - -"
+    "R %h/.config/environment.d/90-synthetic-api-key.conf - - - - -"
+  ];
 
-  # ── Activation: wiki seed (idempotent — never overwrites existing files) ──
-  #
-  # Each wiki root is seeded independently from wiki-seed/.
-  # The [ -e "$dest" ] || cp guard ensures no file is ever overwritten.
-  #
-  home.activation.wikiStarter = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    seed='${wikiSeed}'
+  home.packages = [wikiSeedCommand];
 
-    seed_wiki_root() {
-      wiki_root="$1"
-      wiki_domain="$2"
-
-      # Create directory skeleton (safe to run repeatedly)
-      mkdir -p \
-        "$wiki_root/.stfolder" \
-        "$wiki_root/raw" \
-        "$wiki_root/meta" \
-        "$wiki_root/schemas" \
-        "$wiki_root/templates/markdown" \
-        "$wiki_root/pages/home" \
-        "$wiki_root/pages/planner/tasks" \
-        "$wiki_root/pages/planner/calendar" \
-        "$wiki_root/pages/planner/reminders" \
-        "$wiki_root/pages/planner/reviews" \
-        "$wiki_root/pages/projects" \
-        "$wiki_root/pages/projects/nixpi/persona" \
-        "$wiki_root/pages/projects/nixpi/evolution" \
-        "$wiki_root/pages/areas" \
-        "$wiki_root/pages/resources/knowledge" \
-        "$wiki_root/pages/resources/people" \
-        "$wiki_root/pages/resources/technical" \
-        "$wiki_root/pages/resources/personal" \
-        "$wiki_root/pages/sources" \
-        "$wiki_root/pages/journal/daily" \
-        "$wiki_root/pages/journal/weekly" \
-        "$wiki_root/pages/journal/monthly" \
-        "$wiki_root/pages/archives/planner" \
-        "$wiki_root/pages/archives/projects" \
-        "$wiki_root/pages/archives/areas" \
-        "$wiki_root/pages/archives/resources" \
-        "$wiki_root/pages/archives/journal"
-
-      # Seed files — only if the destination does not already exist. Prune
-      # previously seeded cross-domain files only when they still match the
-      # bundled seed exactly, so user-edited wiki pages are not removed.
-      while IFS= read -r src; do
-        rel="''${src#$seed/}"
-        dest="$wiki_root/$rel"
-        case "$rel" in
-          meta/index.md|meta/log.md)
-            continue
-            ;;
-          pages/*)
-            if ! ${pkgs.gnugrep}/bin/grep -Eq "^domain: $wiki_domain$" "$src"; then
-              if [ -e "$dest" ] && ${pkgs.diffutils}/bin/cmp -s "$src" "$dest"; then
-                rm -f "$dest"
-              fi
-              continue
-            fi
-            ;;
-        esac
-        if [ ! -e "$dest" ]; then
-          mkdir -p "$(dirname "$dest")"
-          cp "$src" "$dest"
-        fi
-      done < <(find "$seed" -type f)
-
-      # Seed an empty registry if none exists yet
-      if [ ! -e "$wiki_root/meta/registry.json" ]; then
-        printf '{"version":1,"generatedAt":"1970-01-01T00:00:00Z","pages":[]}\n' > "$wiki_root/meta/registry.json"
-      fi
-    }
-
-    seed_wiki_root '${technicalWikiDir}' technical
-    seed_wiki_root '${personalWikiDir}' personal
-  '';
+  systemd.user.services.nixpi-wiki-seed = lib.mkIf config.pi.wikiSeed.enable {
+    Unit.Description = "Seed missing NixPI wiki files";
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${wikiSeedCommand}/bin/nixpi-wiki-seed";
+    };
+    Install.WantedBy = ["default.target"];
+  };
 
   # ── Update status timer — checks if NixPI repo is behind origin ────────
   systemd.user.services.nixpi-update-check = {

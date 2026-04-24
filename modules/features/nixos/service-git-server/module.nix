@@ -115,15 +115,5 @@ in {
           cfg.repos}
       '';
     };
-
-    system.activationScripts.gitRepoPerms = lib.stringAfter ["users" "groups"] ''
-      chmod 0755 ${cfg.root}
-      for repo in ${lib.concatStringsSep " " cfg.repos}; do
-        if [ -e ${cfg.root}/$repo ]; then
-          chown -R ${cfg.user}:${cfg.group} ${cfg.root}/$repo
-          chmod -R g+rwX ${cfg.root}/$repo
-        fi
-      done
-    '';
   };
 }

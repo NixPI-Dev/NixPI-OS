@@ -74,6 +74,54 @@
         secret mechanism so the key never enters the Nix store.
       '';
     };
+
+    settingsOverrides = lib.mkOption {
+      type = lib.types.attrs;
+      default = {};
+      description = ''
+        Attribute overrides merged into the declarative PI settings.json.
+        Use this for user-interface defaults that should be owned by Nix.
+      '';
+    };
+
+    webAccessConfig = lib.mkOption {
+      type = lib.types.attrs;
+      default = {
+        provider = "exa";
+        workflow = "summary-review";
+        curatorTimeoutSeconds = 20;
+        githubClone = {
+          enabled = true;
+          maxRepoSizeMB = 350;
+          cloneTimeoutSeconds = 30;
+          clonePath = "/tmp/pi-github-repos";
+        };
+        youtube = {
+          enabled = true;
+          preferredModel = "gemini-3-flash-preview";
+        };
+        video = {
+          enabled = true;
+          preferredModel = "gemini-3-flash-preview";
+          maxSizeMB = 50;
+        };
+        shortcuts = {
+          curate = "ctrl+shift+s";
+          activity = "ctrl+shift+w";
+        };
+      };
+      description = "Declarative contents of ~/.pi/web-search.json.";
+    };
+
+    wikiSeed.enable = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = ''
+        Install and run the idempotent wiki seed user service. The service
+        creates missing wiki directories and seed files, but never overwrites
+        existing user-edited wiki content.
+      '';
+    };
   };
 
   imports = [
