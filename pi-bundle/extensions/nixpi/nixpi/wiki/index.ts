@@ -4,8 +4,9 @@
  * @tools wiki_status, wiki_capture, wiki_search, wiki_ensure_page, wiki_lint, wiki_rebuild
  * @hooks tool_call, agent_end, before_agent_start, session_start, session_shutdown, session_before_compact
  */
+import path from "node:path";
 import { StringEnum } from "@mariozechner/pi-ai";
-import { type ExtensionAPI, isToolCallEventType } from "@mariozechner/pi-coding-agent";
+import { type ExtensionAPI, isToolCallEventType, withFileMutationQueue } from "@mariozechner/pi-coding-agent";
 import { type Static, Type } from "@sinclair/typebox";
 import { captureFile, captureText } from "./actions-capture.ts";
 import { handleWikiLint } from "./actions-lint.ts";
@@ -81,10 +82,20 @@ const WikiLintParams = Type.Object({
 	domain: Type.Optional(Type.String({ description: "Optional domain such as technical or personal." })),
 });
 
+function wikiMutationLockPath(wikiRoot: string): string {
+	return path.join(wikiRoot, "meta", ".wiki-mutation.lock");
+}
+
+async function runWikiRootMutation<T>(wikiRoot: string, operation: () => Promise<T>): Promise<T> {
+	return withFileMutationQueue(wikiMutationLockPath(wikiRoot), operation);
+}
+
 async function runWikiMutation<TDetails extends object>(wikiRoot: string, operation: () => Promise<ActionResult<TDetails>>) {
-	const actionResult = toToolResult(await operation());
-	if (!actionResult.isError) rebuildAllMeta(wikiRoot);
-	return actionResult;
+	return runWikiRootMutation(wikiRoot, async () => {
+		const actionResult = toToolResult(await operation());
+		if (!actionResult.isError) rebuildAllMeta(wikiRoot);
+		return actionResult;
+	});
 }
 
 function buildWikiContextPrompt(): string {
@@ -220,7 +231,8 @@ export default function (pi: ExtensionAPI) {
 			parameters: WikiLintParams,
 			async execute(_toolCallId, params) {
 				const typed = (params ?? {}) as Static<typeof WikiLintParams>;
-				return toToolResult(handleWikiLint(getWikiRootForDomain(typed.domain), typed.mode));
+				const wikiRoot = getWikiRootForDomain(typed.domain);
+				return runWikiRootMutation(wikiRoot, async () => toToolResult(handleWikiLint(wikiRoot, typed.mode)));
 			},
 		},
 		{
@@ -230,8 +242,11 @@ export default function (pi: ExtensionAPI) {
 			parameters: WikiDomainParams,
 			async execute(_toolCallId, params) {
 				const typed = (params ?? {}) as Static<typeof WikiDomainParams>;
-				rebuildAllMeta(getWikiRootForDomain(typed.domain));
-				return toToolResult(ok({ text: "Rebuilt wiki metadata." }));
+				const wikiRoot = getWikiRootForDomain(typed.domain);
+				return runWikiRootMutation(wikiRoot, async () => {
+					rebuildAllMeta(wikiRoot);
+					return toToolResult(ok({ text: "Rebuilt wiki metadata." }));
+				});
 			},
 		},
 	];

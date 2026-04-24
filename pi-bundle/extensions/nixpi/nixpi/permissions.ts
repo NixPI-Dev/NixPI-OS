@@ -1,4 +1,4 @@
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import { type ExtensionAPI, isToolCallEventType } from "@mariozechner/pi-coding-agent";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -87,12 +87,9 @@ export default function registerPermissionsHooks(pi: ExtensionAPI) {
   });
 
   pi.on("tool_call", async (event) => {
-    if (event.toolName !== "bash") return undefined;
+    if (!isToolCallEventType("bash", event)) return undefined;
 
-    const command = event.input?.command;
-    if (typeof command !== "string") return undefined;
-
-    const reason = getBlockReason(command);
+    const reason = getBlockReason(event.input.command);
     if (!reason) return undefined;
 
     return {

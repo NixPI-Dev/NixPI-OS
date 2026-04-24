@@ -173,6 +173,31 @@ function discoveryHint(scope: AgentScope, projectAgentsDir: string | null): stri
   return `${userHint}. ${projectHint}.`;
 }
 
+function parseAgentScopeArg(input: string): AgentScope {
+  const normalized = input.trim().toLowerCase();
+  if (normalized === "project") return "project";
+  if (normalized === "both") return "both";
+  return "user";
+}
+
+function formatAgentList(agents: AgentConfig[], scope: AgentScope, projectAgentsDir: string | null): string {
+  if (agents.length === 0) {
+    return `No agents found for scope "${scope}". ${discoveryHint(scope, projectAgentsDir)}`;
+  }
+
+  const lines = [`Agents (${scope}):`];
+  for (const agent of agents) {
+    const tools = agent.tools?.length ? ` tools=[${agent.tools.join(", ")}]` : "";
+    const model = agent.model && agent.model !== CURRENT_MODEL_SENTINEL ? ` model=${agent.model}` : "";
+    lines.push(`- ${agent.name} (${agent.source}) — ${agent.description}${tools}${model}`);
+  }
+  if (scope !== "user") {
+    lines.push("");
+    lines.push(discoveryHint(scope, projectAgentsDir));
+  }
+  return lines.join("\n");
+}
+
 type RunContext = {
   cwd: string;
   inheritedModel?: string;
@@ -383,6 +408,16 @@ const SubagentParams = Type.Object({
 });
 
 export default function subagentExtension(pi: ExtensionAPI) {
+  pi.registerCommand("agents", {
+    description: "List available subagents. Usage: /agents [user|project|both]",
+    handler: async (args, ctx) => {
+      const scope = parseAgentScopeArg(args || "user");
+      const discovery = discoverAgents(ctx.cwd, scope);
+      const text = formatAgentList(discovery.agents, scope, discovery.projectAgentsDir);
+      if (ctx.hasUI) ctx.ui.notify(text, "info");
+    },
+  });
+
   pi.registerTool({
     name: "subagent",
     label: "Subagent",
