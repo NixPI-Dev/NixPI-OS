@@ -36,7 +36,7 @@ in {
     repos = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [];
-      example = ["vps-nixos-config.git" "yoga-nixos-config.git" "wiki-technical.git" "wiki-personal.git"];
+      example = ["vps-nixos-config.git" "wiki-technical.git" "wiki-personal.git"];
       description = "Bare repository directory names to initialize under services.nixpi-git-server.root.";
     };
 
