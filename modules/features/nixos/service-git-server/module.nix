@@ -66,6 +66,7 @@ in {
       description = "Git repository owner";
       group = cfg.group;
       home = cfg.root;
+      homeMode = "0755";
       createHome = true;
       useDefaultShell = false;
       shell = "${pkgs.git}/bin/git-shell";
