@@ -22,37 +22,10 @@
     synthetic = piBundleRoot + "/extensions/nixpi/synthetic";
   };
 
-  # ── Local llama models — set per-host via pi.llamaModels ─────────────────
-  llamaModels = config.pi.llamaModels;
   packageSources = config.pi.packageSources;
 
-  # Synthetic provider is now registered dynamically by the synthetic
-  # PI extension (pi-bundle/extensions/nixpi/synthetic/). models.json
-  # only contains local llama providers if configured per-host.
-  llamaModelIds = map (m: "llama/${m.id}") llamaModels;
-  hasLlama = llamaModels != [];
-
-  llamaProvider = {
-    baseUrl = "http://127.0.0.1:8080/v1";
-    apiKey = "local";
-    api = "openai-completions";
-    compat = {
-      supportsDeveloperRole = false;
-      supportsReasoningEffort = false;
-      maxTokensField = "max_tokens";
-    };
-    models = llamaModels;
-  };
-
-  piModelsBase = {
-    providers = lib.optionalAttrs hasLlama {
-      llama = llamaProvider;
-    };
-  };
-
-  piModelsBaseJson = pkgs.writeText "pi-models-base.json" (builtins.toJSON piModelsBase);
-
-
+  # Synthetic provider is registered dynamically by the synthetic
+  # PI extension. models.json is no longer managed by Nix.
 
   wikiSeedCommand = pkgs.writeShellApplication {
     name = "nixpi-wiki-seed";
@@ -195,8 +168,8 @@ in {
   home.file.".pi/agent/agents/reviewer.md".source = piBundleRoot + "/agents/reviewer.md";
 
   # ── PI generated config ──────────────────────────────────────────────────
-  # models.json is fully declarative (available model definitions).
-  home.file.".pi/agent/models.json".source = piModelsBaseJson;
+  # models.json is no longer managed by Nix — the synthetic extension
+  # registers the provider dynamically at PI startup.
 
 
 
