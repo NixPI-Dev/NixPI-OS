@@ -130,26 +130,7 @@
 
   piModelsBaseJson = pkgs.writeText "pi-models-base.json" (builtins.toJSON piModelsBase);
 
-  # ── PI settings.json — fully declarative ──────────────────────────────────
-  piSettings =
-    {
-      lastChangelogVersion = "0.67.68";
-      defaultThinkingLevel = "high";
-      hideThinkingBlock = true;
-      defaultProvider = "synthetic";
-      defaultModel = "hf:zai-org/GLM-5.1";
-      enabledModels = syntheticModelIds ++ llamaModelIds;
-      packages = packageSources;
-      mcpServers = {
-        qmd = {
-          command = "qmd";
-          args = ["mcp"];
-        };
-      };
-    }
-    // config.pi.settingsOverrides;
 
-  piSettingsJson = pkgs.writeText "pi-settings.json" (builtins.toJSON piSettings);
 
   wikiSeedCommand = pkgs.writeShellApplication {
     name = "nixpi-wiki-seed";
@@ -293,8 +274,10 @@ in {
 
   # ── PI generated config ──────────────────────────────────────────────────
   home.file.".pi/web-search.json".text = "${builtins.toJSON config.pi.webAccessConfig}\n";
-  home.file.".pi/agent/settings.json".source = piSettingsJson;
+  # models.json is fully declarative (available model definitions).
   home.file.".pi/agent/models.json".source = piModelsBaseJson;
+
+
 
   # ── Session variables ─────────────────────────────────────────────────────
   home.sessionVariables.PI_LLM_WIKI_DIR = defaultWikiDir;
@@ -362,6 +345,7 @@ in {
     Unit.Description = "NixPI repo update check timer";
     Timer = {
       OnBootSec = "5min";
+      OnActiveSec = "12h";
       OnUnitActiveSec = "12h";
       Persistent = true;
     };
