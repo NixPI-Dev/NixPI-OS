@@ -87,7 +87,7 @@ export default function nixpiPermissionsExtension(pi: ExtensionAPI) {
     }
   });
 
-  pi.on("tool_call", async (event, _ctx) => {
+  pi.on("tool_call", async (event) => {
     if (event.toolName !== "bash") return undefined;
 
     const command = event.input?.command;
@@ -102,7 +102,7 @@ export default function nixpiPermissionsExtension(pi: ExtensionAPI) {
     };
   });
 
-  pi.on("user_bash", async (event, _ctx) => {
+  pi.on("user_bash", async (event) => {
     if (typeof event.command !== "string") return undefined;
 
     const reason = getBlockReason(event.command);

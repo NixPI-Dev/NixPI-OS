@@ -11,6 +11,7 @@ const NIXOS_UPDATE_ACTIONS = ["status", "apply", "rollback"] as const;
 const SYSTEMD_ACTIONS = ["start", "stop", "restart", "status"] as const;
 const PROPOSAL_ACTIONS = ["status", "validate", "diff", "commit", "push", "apply"] as const;
 const ALLOWED_SYSTEMD_UNITS = new Set(["sshd", "syncthing", "reaction"]);
+const SUDO_AUTH_TIMEOUT_MS = 120_000;
 
 async function run(cmd: string, args: string[], signal?: AbortSignal, cwd?: string) {
   try {
@@ -45,25 +46,95 @@ function shellEscape(value: string) {
 }
 
 // ── sudo helper ────────────────────────────────────────────────────────────
-// Keep the flow simple: probe sudo -n; if inactive, ask the user to run
-// `!sudo -v` in another shell and then confirm.
+// Keep the flow simple: try privileged commands with sudo -n first. If sudo
+// reports that authentication is required, open a small Zellij panel where the
+// human can run sudo -v, then retry the command.
 
-async function ensureSudo(_pi: ExtensionAPI, ctx: any, signal?: AbortSignal): Promise<boolean> {
-  try {
-    await promisify(execFile)("sudo", ["-n", "true"], { signal, timeout: 10_000 });
-    return true;
-  } catch {
-    if (!ctx.hasUI) return false;
-    return ctx.ui.confirm("Privilege Required", "Run `!sudo -v` in pi shell or `sudo -v` in another terminal, then confirm here.");
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, ms);
+    if (!signal) return;
+    signal.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(timer);
+        reject(new Error("aborted"));
+      },
+      { once: true },
+    );
+  });
+}
+
+function commandWithNonInteractiveSudo(command: string) {
+  return command.replace(/\bsudo\b/, "sudo -n");
+}
+
+function isSudoAuthFailure(result: { stdout: string; stderr: string; exitCode: number }) {
+  if (result.exitCode === 0) return false;
+  const text = `${result.stderr}\n${result.stdout}`;
+  return /a password is required|a terminal is required|no tty present|authentication is required|try again/i.test(text);
+}
+
+async function hasCachedSudo(signal?: AbortSignal) {
+  const result = await run("sudo", ["-n", "true"], signal);
+  return result.exitCode === 0;
+}
+
+async function openSudoPanel(label: string, signal?: AbortSignal) {
+  const script = `
+    if command -v nixpi-tui >/dev/null 2>&1; then
+      exec nixpi-tui sudo "$1"
+    fi
+
+    user="$USER"
+    if [ -z "$user" ]; then
+      user="alex"
+    fi
+    exec "/etc/profiles/per-user/$user/bin/nixpi-tui" sudo "$1"
+  `;
+
+  return run("bash", ["-lc", script, "nixpi-sudo", label], signal);
+}
+
+async function waitForSudo(timeoutMs: number, signal?: AbortSignal) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (await hasCachedSudo(signal)) return true;
+    await sleep(1000, signal);
   }
+
+  return false;
+}
+
+async function ensureSudo(ctx: any, signal: AbortSignal | undefined, label: string): Promise<boolean> {
+  if (await hasCachedSudo(signal)) return true;
+  if (!ctx.hasUI) return false;
+
+  const panel = await openSudoPanel(label, signal);
+  if (panel.exitCode !== 0) {
+    const details = truncate(panel.stderr || panel.stdout || "Could not open the NixPI sudo panel.");
+    const ok = await ctx.ui.confirm(
+      "Privilege Required",
+      `${details}\n\nRun \`sudo -v\` in another terminal, then confirm here.`,
+    );
+    return ok ? hasCachedSudo(signal) : false;
+  }
+
+  ctx.ui.notify("Opened NixPI sudo panel. Enter the sudo password there to continue.", "warning");
+  if (await waitForSudo(SUDO_AUTH_TIMEOUT_MS, signal)) return true;
+
+  const ok = await ctx.ui.confirm(
+    "Privilege Required",
+    "Still waiting for sudo authentication. Run `sudo -v` in the NixPI sudo panel or another terminal, then confirm here.",
+  );
+  return ok ? hasCachedSudo(signal) : false;
 }
 
 // ── Run a privileged command via sudo -n ───────────────────────────────────
-// We ensure sudo credentials and then run the command directly.
-// Output streams back to PI through the normal bash execution path.
+// We first try the command directly. If sudo needs a password, open the
+// Zellij sudo panel, wait for credentials, then retry.
 
 async function runPrivileged(
-  _pi: ExtensionAPI,
   ctx: any,
   signal: AbortSignal | undefined,
   command: string,
@@ -74,16 +145,20 @@ async function runPrivileged(
     return { content: [{ type: "text" as const, text: denied }], details: { ok: false }, isError: true };
   }
 
-  const hasSudo = await ensureSudo(_pi, ctx, signal);
-  if (!hasSudo) {
-    return {
-      content: [{ type: "text" as const, text: `Cancelled: sudo authentication not available for ${confirmationLabel}.` }],
-      details: { ok: false, reason: "no-sudo" },
-    };
+  let result = await run("bash", ["-c", commandWithNonInteractiveSudo(command)], signal);
+
+  if (isSudoAuthFailure(result)) {
+    const hasSudo = await ensureSudo(ctx, signal, confirmationLabel);
+    if (!hasSudo) {
+      return {
+        content: [{ type: "text" as const, text: `Cancelled: sudo authentication not available for ${confirmationLabel}.` }],
+        details: { ok: false, reason: "no-sudo" },
+      };
+    }
+
+    result = await run("bash", ["-c", commandWithNonInteractiveSudo(command)], signal);
   }
 
-  // Run with sudo -n (non-interactive)
-  const result = await run("bash", ["-c", command.replace(/\bsudo\b/, "sudo -n")], signal);
   const ok = result.exitCode === 0;
   const text = ok
     ? truncate(result.stdout || `(exit ${result.exitCode})`)
@@ -199,7 +274,6 @@ async function handleSystemHealth(signal?: AbortSignal) {
 }
 
 async function handleNixosUpdate(
-  pi: ExtensionAPI,
   action: (typeof NIXOS_UPDATE_ACTIONS)[number],
   signal: AbortSignal | undefined,
   ctx: any,
@@ -215,7 +289,7 @@ async function handleNixosUpdate(
   }
 
   if (action === "rollback") {
-    return runPrivileged(pi, ctx, signal, "sudo nixos-rebuild switch --rollback", "OS rollback");
+    return runPrivileged(ctx, signal, "sudo nixos-rebuild switch --rollback", "OS rollback");
   }
 
   const flakeDir = systemFlakeDir();
@@ -229,7 +303,6 @@ async function handleNixosUpdate(
   }
 
   return runPrivileged(
-    pi,
     ctx,
     signal,
     `sudo nixos-rebuild switch --flake ${shellEscape(flakeRef)}`,
@@ -238,7 +311,6 @@ async function handleNixosUpdate(
 }
 
 async function handleSystemdControl(
-  pi: ExtensionAPI,
   service: string,
   action: (typeof SYSTEMD_ACTIONS)[number],
   signal: AbortSignal | undefined,
@@ -265,7 +337,6 @@ async function handleSystemdControl(
   }
 
   return runPrivileged(
-    pi,
     ctx,
     signal,
     `sudo systemctl ${action} ${shellEscape(unit)} --no-pager`,
@@ -274,14 +345,12 @@ async function handleSystemdControl(
 }
 
 async function handleScheduleReboot(
-  pi: ExtensionAPI,
   delayMinutes: number,
   signal: AbortSignal | undefined,
   ctx: any,
 ) {
   const delay = Math.max(1, Math.min(7 * 24 * 60, Math.round(delayMinutes)));
   return runPrivileged(
-    pi,
     ctx,
     signal,
     `sudo shutdown -r +${delay}`,
@@ -336,7 +405,6 @@ async function handleUpdateStatus() {
 }
 
 async function handleNixConfigProposal(
-  pi: ExtensionAPI,
   action: (typeof PROPOSAL_ACTIONS)[number],
   signal: AbortSignal | undefined,
   ctx: any,
@@ -440,7 +508,6 @@ async function handleNixConfigProposal(
   // apply
   const flakeRef = `${repoDir}#${currentHostName()}`;
   return runPrivileged(
-    pi,
     ctx,
     signal,
     `sudo nixos-rebuild switch --flake ${shellEscape(flakeRef)}`,
@@ -480,7 +547,7 @@ export default function osExtension(pi: ExtensionAPI) {
       }),
     }),
     async execute(_toolCallId, params, signal, _onUpdate, ctx) {
-      return handleNixConfigProposal(pi, params.action, signal, ctx);
+      return handleNixConfigProposal(params.action, signal, ctx);
     },
   });
 
@@ -514,7 +581,7 @@ export default function osExtension(pi: ExtensionAPI) {
       }),
     }),
     async execute(_toolCallId, params, signal, _onUpdate, ctx) {
-      return handleNixosUpdate(pi, params.action, signal, ctx);
+      return handleNixosUpdate(params.action, signal, ctx);
     },
   });
 
@@ -531,7 +598,7 @@ export default function osExtension(pi: ExtensionAPI) {
       delay_minutes: Type.Number({ description: "Minutes to wait before rebooting", default: 1 }),
     }),
     async execute(_toolCallId, params, signal, _onUpdate, ctx) {
-      return handleScheduleReboot(pi, params.delay_minutes, signal, ctx);
+      return handleScheduleReboot(params.delay_minutes, signal, ctx);
     },
   });
 
@@ -549,7 +616,7 @@ export default function osExtension(pi: ExtensionAPI) {
       action: StringEnum(SYSTEMD_ACTIONS, { description: "Systemd action to run." }),
     }),
     async execute(_toolCallId, params, signal, _onUpdate, ctx) {
-      return handleSystemdControl(pi, params.service, params.action, signal, ctx);
+      return handleSystemdControl(params.service, params.action, signal, ctx);
     },
   });
 

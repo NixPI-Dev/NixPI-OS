@@ -18,6 +18,18 @@
   # Syncthing wins once it syncs; the seed only fills gaps.
   wikiSeed = piBundleRoot + "/wiki-seed";
 
+  bundledPiExtensions = {
+    llm-wiki = llmWikiRoot;
+    nixpi = piBundleRoot + "/extensions/nixpi/nixpi";
+    nixpi-permissions = piBundleRoot + "/extensions/nixpi/nixpi-permissions";
+    os = piBundleRoot + "/extensions/nixpi/os";
+    subagent = piBundleRoot + "/extensions/nixpi/subagent";
+    zz-synthetic-search = piBundleRoot + "/extensions/nixpi/zz-synthetic-search";
+  };
+
+  mkBundledPiExtension = name: source:
+    lib.nameValuePair ".pi/agent/extensions/${name}" {inherit source;};
+
   starterConfig = builtins.toJSON {
     provider = "exa";
     workflow = "summary-review";
@@ -169,6 +181,8 @@
 
   piSettingsJson = pkgs.writeText "pi-settings.json" (builtins.toJSON piSettings);
 in {
+  home.file = builtins.listToAttrs (lib.mapAttrsToList mkBundledPiExtension bundledPiExtensions);
+
   # ── qmd — local retrieval layer ───────────────────────────────────────────
   home.file.".config/qmd/index.yml".text = ''
     global_context: >-
@@ -213,12 +227,7 @@ in {
   home.file.".pi/agent/agents/.keep".text = "";
 
   # ── PI extensions — in-house (NixPI-Dev) ─────────────────────────────────
-  home.file.".pi/agent/extensions/llm-wiki".source = llmWikiRoot;
-  home.file.".pi/agent/extensions/nixpi".source = piBundleRoot + "/extensions/nixpi/nixpi";
-  home.file.".pi/agent/extensions/nixpi-permissions".source = piBundleRoot + "/extensions/nixpi/nixpi-permissions";
-  home.file.".pi/agent/extensions/os".source = piBundleRoot + "/extensions/nixpi/os";
-  home.file.".pi/agent/extensions/subagent".source = piBundleRoot + "/extensions/nixpi/subagent";
-  home.file.".pi/agent/extensions/zz-synthetic-search".source = piBundleRoot + "/extensions/nixpi/zz-synthetic-search";
+  # Installed from bundledPiExtensions above.
 
   # ── PI extensions — public/third-party (future) ──────────────────────────
   # Add home.file entries for public extensions under ./extensions/public/ here.
