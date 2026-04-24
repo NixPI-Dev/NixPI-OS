@@ -18,7 +18,7 @@
     ];
 
     # wiki-technical() and wiki-personal() switch the active wiki context.
-    # The llm-wiki extension also receives both roots via dedicated env vars.
+    # The nixpi wiki module also receives both roots via dedicated env vars.
     initExtra = ''
       wiki-technical() {
         export PI_LLM_WIKI_DIR="${config.nixpi.wiki.technical}"

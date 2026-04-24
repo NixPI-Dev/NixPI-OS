@@ -30,9 +30,9 @@ An object has:
 | Collections | Curated dashboard / map-of-content pages |
 | Dashboard | A note in `pages/home/` |
 
-## Why this works well with llm-wiki
+## Why this works well with nixpi-wiki
 
-LLM-wiki is good at:
+nixpi-wiki is good at:
 - creating notes from sources
 - maintaining summaries
 - updating relationships

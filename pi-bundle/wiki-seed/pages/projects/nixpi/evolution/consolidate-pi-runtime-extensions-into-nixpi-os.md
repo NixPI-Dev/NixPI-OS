@@ -11,51 +11,51 @@ status: applied
 risk: medium
 area: extensions
 validation_level: working
-summary: Merge llm-wiki and nixpi-permissions into the NixPI-OS pi-bundle so PI runtime extensions, tests, and Home Manager wiring evolve in one repo.
+summary: Merge nixpi-wiki into the bundled nixpi extension and keep NixPI-specific PI runtime behavior in one repo.
 created: 2026-04-24
 updated: 2026-04-24
 ---
 
-# Consolidate PI runtime extensions into NixPI-OS
+# Consolidate PI Runtime Extensions Into NixPI-OS
 
 ## Motivation
 
-NixPI currently ships PI runtime behavior from three repositories:
+NixPI previously shipped PI runtime behavior from three repositories:
 
-- `NixPI-LLM-Wiki` provides wiki tools, persona context, caveman-lite state, compaction context, and wiki path protection
+- `NixPI-LLM-Wiki` provided wiki tools, persona context, caveman-lite state, compaction context, and wiki path protection
 - `nixpi-permissions` provides the deny-only shell guard for PI agent and user shell hooks
 - `NixPI-OS` provides the PI bundle, OS wiring, status command, subagents, search extension, prompts, skills, wiki seed, and evolution notes
 
 That split creates coordination cost for changes that naturally span one runtime lifecycle. Extension hooks such as `session_start`, `tool_call`, and `before_agent_start` are configured and deployed together, but changes currently require separate repo updates, separate flake input updates, and cross-repo validation.
 
-The `nixpi-permissions` repo is tiny and NixPI-specific. `llm-wiki` still has a larger test suite and package boundary, but it now carries NixPI-specific persona, compaction, and guardrail behavior. Its reuse story outside NixPI is weak compared with the operational cost of keeping it separate.
+The wiki runtime now carries NixPI-specific persona, compaction, and guardrail behavior. Its reuse story outside NixPI is weak compared with the operational cost of keeping it separate or exposing it as a standalone CLI.
 
 ## Plan
 
-1. keep each extension as its own directory under `pi-bundle/extensions/nixpi/`
-2. keep `nixpi-permissions` at `pi-bundle/extensions/nixpi/nixpi-permissions/`
-3. move `NixPI-LLM-Wiki/extension/` to `pi-bundle/extensions/nixpi/llm-wiki/`
-4. move the `llm-wiki` Nix package and tests into NixPI-OS as a local sub-package
-5. run `llm-wiki` tests from the NixPI-OS flake check
-6. remove the `llm-wiki` flake input from NixPI-OS after the local package is wired
-7. keep Home Manager installing `.pi/agent/extensions/llm-wiki` from `${pkgs.llm-wiki}/share/llm-wiki`, now built locally by NixPI-OS
-8. update NixPI path metadata and docs so `repos/NixPI-LLM-Wiki` is no longer treated as an active runtime dependency
+1. move the wiki implementation under `pi-bundle/extensions/nixpi/nixpi/wiki/`
+2. register the wiki tools from the main `nixpi` extension entrypoint
+3. remove the standalone wiki CLI and runtime package
+4. keep a local `pkgs/nixpi-wiki` test package for the wiki module
+5. run `nixpi-wiki` tests from the NixPI-OS flake check
+6. keep Home Manager installing only the bundled `nixpi` runtime extension
+7. update docs and path metadata so `repos/NixPI-LLM-Wiki` is no longer treated as an active runtime dependency
 
 ## Validation
 
 - `nix flake check` passes in `~/NixPI/repos/NixPI-OS`
-- `nix build .#llm-wiki --no-link` passes in `~/NixPI/repos/NixPI-OS`
+- `nix build .#nixpi-wiki-tests --no-link` passes in `~/NixPI/repos/NixPI-OS`
 - `nix flake check` passes in `~/NixPI/host-configs/vps-nixos` against the local NixPI-OS path input
 - after publishing NixPI-OS, update any remote-pinned config lock to the consolidated NixPI-OS revision
 - a rebuilt host contains:
-  - `~/.pi/agent/extensions/llm-wiki/index.ts`
+  - `~/.pi/agent/extensions/nixpi/index.ts`
+  - `~/.pi/agent/extensions/nixpi/wiki/index.ts`
   - `~/.pi/agent/extensions/nixpi-permissions/index.ts`
   - no active Home Manager dependency on a separate `NixPI-LLM-Wiki` checkout
 
 ## Rollout
 
-1. merge the local package and test move in NixPI-OS
-2. remove the `llm-wiki` input from NixPI-OS and refresh `repos/NixPI-OS/flake.lock`
+1. merge the local wiki module and test move in NixPI-OS
+2. remove the old standalone wiki package and Home Manager extension entry
 3. update the config flake lock to the new NixPI-OS revision after committing and pushing NixPI-OS
 4. run `nix flake check` in `~/NixPI/host-configs/vps-nixos`
 5. rebuild the host
@@ -63,11 +63,11 @@ The `nixpi-permissions` repo is tiny and NixPI-specific. `llm-wiki` still has a 
 
 ## Rollback
 
-If the `llm-wiki` move breaks tests or runtime extension loading:
+If the `nixpi-wiki` merge breaks tests or runtime extension loading:
 
-1. restore the `llm-wiki` flake input in NixPI-OS
-2. restore `pkgs.llm-wiki` to `inputs.llm-wiki.packages.${system}.default`
-3. point `.pi/agent/extensions/llm-wiki` back to `${pkgs.llm-wiki}/share/llm-wiki`
+1. restore the previous separate wiki extension package
+2. restore the Home Manager standalone wiki bundled extension entry
+3. point the standalone wiki extension path back to the restored package
 4. rebuild the host
 
 If `nixpi-permissions` breaks after consolidation, disable only `~/.pi/agent/extensions/nixpi-permissions` while keeping the rest of the PI bundle active.
@@ -80,7 +80,7 @@ If `nixpi-permissions` breaks after consolidation, disable only `~/.pi/agent/ext
 - `~/NixPI/repos/NixPI-OS/modules/features/home/pi/resources.nix`
 - `~/NixPI/repos/NixPI-OS/modules/features/home/nixpi-paths/module.nix`
 - `~/NixPI/repos/NixPI-OS/modules/features/nixos/nixpi-paths/module.nix`
-- `~/NixPI/repos/NixPI-OS/pi-bundle/extensions/nixpi/llm-wiki/`
+- `~/NixPI/repos/NixPI-OS/pi-bundle/extensions/nixpi/nixpi/wiki/`
 - `~/NixPI/repos/NixPI-OS/pi-bundle/extensions/nixpi/nixpi-permissions/`
 - `~/NixPI/repos/NixPI-LLM-Wiki/`
 - `~/NixPI/repos/nixpi-permissions/`

@@ -17,7 +17,7 @@
           touch $out
         '';
 
-      llm-wiki-tests = pkgs.callPackage ../../pkgs/llm-wiki/tests.nix {};
+      nixpi-wiki-tests = pkgs.callPackage ../../pkgs/nixpi-wiki/tests.nix {};
     };
   };
 }

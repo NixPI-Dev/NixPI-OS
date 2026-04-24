@@ -5,6 +5,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
+import registerWikiExtension from "./wiki/index.ts";
 
 const execFileAsync = promisify(execFile);
 
@@ -611,6 +612,8 @@ async function handleNixConfigProposal(
 // ── Extension entry ─────────────────────────────────────────────────────────
 
 export default function nixpiExtension(pi: ExtensionAPI) {
+  registerWikiExtension(pi);
+
   // ── NixPI runtime tools ────────────────────────────────────────────────
 
   pi.registerTool({

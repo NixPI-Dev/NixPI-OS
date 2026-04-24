@@ -55,7 +55,7 @@ Locally maintained package definitions.
 - `pkgs/pi` builds the Pi binary under our control
 - `pkgs/pi-gateway` is the generic transport gateway (Signal and WhatsApp)
 - `pkgs/pi-web-access` provides the web-search extension
-- `pkgs/llm-wiki` packages the bundled wiki extension from `pi-bundle/extensions/nixpi/llm-wiki`
+- `pkgs/nixpi-wiki` contains the bundled wiki module test package from `pi-bundle/extensions/nixpi/nixpi/wiki`
 - packages are exported through `overlays.default` and reused everywhere
 
 ### `service-pi-gateway`
@@ -108,8 +108,7 @@ Typical consumption pattern from a private fleet config:
 The Pi runtime includes several capabilities:
 
 - `os` extension — `system_health`, `nixos_update`, `systemd_control`, `schedule_reboot`
-- `nixpi` extension — `nixpi_status`, `nixpi_evolution_note`, `/nixpi status`
-- `llm-wiki` extension — wiki capture, search, scaffolding, linting, persona context, and compaction context
+- `nixpi` extension — `nixpi_status`, `nixpi_evolution_note`, `/nixpi status`, plus wiki capture, search, scaffolding, linting, persona context, and compaction context
 - `nixpi-permissions` extension — deny-only guard for dangerous Pi shell commands
 - `subagent` extension — isolated helper agents (scout/planner/worker/reviewer)
 - restored PI skills — `wiki`, `os-operations`, `self-evolution`
@@ -179,7 +178,7 @@ nix flake check --accept-flake-config  # run all checks
 ### Current check coverage
 
 - formatting for all Nix files
-- bundled `llm-wiki` test suite
+- bundled `nixpi-wiki` test suite
 
 ## Notes
 

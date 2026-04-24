@@ -136,7 +136,6 @@ in {
     procs # colourised `ps` with tree view and search
     bottom # GPU-aware `htop` replacement with charts
     qmd # hybrid BM25/vector search for markdown
-    llm-wiki # portable wiki runtime CLI + Pi extension payload
     nodejs # node + npm, needed for `pi install npm:...`
   ];
 }

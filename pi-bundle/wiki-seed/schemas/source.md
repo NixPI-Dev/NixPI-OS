@@ -23,14 +23,17 @@ A source note represents processed external material: an article, paper, video, 
 |---|---|
 | `id` | `source/<slug>` |
 | `schema_version` | `1` |
-| `type` | `synthesis` |
+| `type` | `source` |
 | `object_type` | `source` |
+| `source_id` | stable external/source capture ID |
 | `title` | descriptive title of the source |
-| `domain` | `technical` or `personal` |
-| `areas` | one or more area slugs |
-| `status` | `active` or `archived` |
+| `status` | `captured`, `integrated`, or `superseded` |
+| `captured_at` | ISO timestamp |
 | `created` | ISO date |
 | `updated` | ISO date |
+| `origin_type` | `text`, `file`, or `url` |
+| `origin_value` | source path, URL, or text label |
+| `source_ids` | external reference IDs or URLs |
 | `summary` | what the source says and why it matters |
 
 ## Optional fields
@@ -39,8 +42,11 @@ A source note represents processed external material: an article, paper, video, 
 |---|---|---|
 | `aliases` | array | |
 | `tags` | array | from `meta/tags.md` |
+| `domain` | string | `technical` or `personal` when known |
+| `areas` | array | area slugs when known |
 | `validation_level` | enum | default: `seed` |
-| `source_ids` | array | external reference IDs or URLs |
+| `integrated_at` | ISO timestamp | set after ingestion |
+| `integration_targets` | array | target pages created or updated from this source |
 
 Do **not** add review-cycle fields to source notes — sources are static.
 
@@ -54,8 +60,9 @@ Do **not** add review-cycle fields to source notes — sources are static.
 
 ## Status values
 
-- `active` — processed and in use
-- `archived` — superseded or no longer relevant
+- `captured` — stored as raw evidence, not yet integrated
+- `integrated` — processed into wiki pages
+- `superseded` — replaced by newer or better evidence
 
 ## Recommended body sections
 
@@ -69,16 +76,21 @@ Do **not** add review-cycle fields to source notes — sources are static.
 ```yaml
 id: source/capacities-object-model-research
 schema_version: 1
-type: synthesis
+type: source
 object_type: source
+source_id: web:nixpi-wiki-pattern
 title: Capacities Object Model Research
 domain: technical
 areas: [knowledge-system, research]
-status: active
+status: integrated
 validation_level: working
+captured_at: 2026-04-21T00:00:00.000Z
 created: 2026-04-21
 updated: 2026-04-21
-source_ids: [web:capacities-docs-object-types, web:llm-wiki-pattern]
+origin_type: url
+origin_value: https://example.invalid/nixpi-wiki-pattern
+source_ids: [web:capacities-docs-object-types, web:nixpi-wiki-pattern]
+integration_targets: [project/nixpi, project/personal-second-brain]
 projects: [project/nixpi, project/personal-second-brain]
-summary: Research on translating Capacities-style objects into plain Markdown and llm-wiki conventions.
+summary: Research on translating Capacities-style objects into plain Markdown and nixpi-wiki conventions.
 ```

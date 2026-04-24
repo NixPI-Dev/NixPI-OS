@@ -61,7 +61,6 @@ in {
         (final: _prev: {
           pi = final.callPackage ../../pkgs/pi {};
           pi-web-access = final.callPackage ../../pkgs/pi-web-access {};
-          llm-wiki = final.callPackage ../../pkgs/llm-wiki {};
           pi-gateway = final.callPackage ../../pkgs/pi-gateway {};
           qmd = mkQmd final system;
         })
@@ -93,8 +92,7 @@ in {
     packages = {
       pi = pkgs.pi;
       pi-web-access = pkgs.pi-web-access;
-      llm-wiki = pkgs.llm-wiki;
-      llm-wiki-tests = pkgs.callPackage ../../pkgs/llm-wiki/tests.nix {};
+      nixpi-wiki-tests = pkgs.callPackage ../../pkgs/nixpi-wiki/tests.nix {};
       pi-gateway = pkgs.pi-gateway;
       qmd = pkgs.qmd;
       nixpi-vcp = nixpi-vcp;
@@ -122,7 +120,6 @@ in {
     // {
       pi = final.callPackage ../../pkgs/pi {};
       pi-web-access = final.callPackage ../../pkgs/pi-web-access {};
-      llm-wiki = final.callPackage ../../pkgs/llm-wiki {};
       pi-gateway = final.callPackage ../../pkgs/pi-gateway {};
       qmd = mkQmd final final.stdenv.hostPlatform.system;
     };

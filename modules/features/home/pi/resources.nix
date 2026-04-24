@@ -5,7 +5,6 @@
   ...
 }: let
   piWebAccessRoot = "${pkgs.pi-web-access}/share/pi-web-access";
-  llmWikiRoot = "${pkgs.llm-wiki}/share/llm-wiki";
   piBundleRoot = ../../../../pi-bundle;
 
   technicalWikiDir = config.nixpi.wiki.technical;
@@ -19,7 +18,6 @@
   wikiSeed = piBundleRoot + "/wiki-seed";
 
   bundledPiExtensions = {
-    llm-wiki = llmWikiRoot;
     nixpi = piBundleRoot + "/extensions/nixpi/nixpi";
     nixpi-permissions = piBundleRoot + "/extensions/nixpi/nixpi-permissions";
     subagent = piBundleRoot + "/extensions/nixpi/subagent";
