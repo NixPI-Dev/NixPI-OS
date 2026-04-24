@@ -5,7 +5,9 @@
  * - Tracks sudo credential state via `sudo -n true` probes
  * - Shows a footer status indicator (active/inactive + approximate timer)
  * - Intercepts `bash` tool calls containing `sudo` and rewrites to `sudo -n`
- * - Prompts the user to run `sudo -v` in another session when needed
+ * - When inside zellij: opens a new pane for `sudo -v` so the user can
+ *   authenticate without leaving the current session
+ * - When not in zellij: prompts the user to run `sudo -v` in another session
  *
  * Commands:
  *   /sudo-status    — show full sudo credential state
@@ -52,6 +54,14 @@ async function run(cmd: string, args: string[], signal?: AbortSignal) {
   }
 }
 
+function isInZellij(): boolean {
+  return !!process.env.ZELLIJ;
+}
+
+function isInTmux(): boolean {
+  return !!process.env.TMUX;
+}
+
 async function probeSudo(signal?: AbortSignal): Promise<boolean> {
   const ok = await run("sudo", ["-n", "true"], signal);
   if (ok) {
@@ -96,6 +106,31 @@ function updateFooter(ctx: any) {
   ctx.ui.setStatus("sudo-auth", statusText(theme));
 }
 
+// ── Open a sudo -v pane in the current multiplexer ────────────────────────
+
+async function openSudoPane(): Promise<void> {
+  if (isInZellij()) {
+    // Open a new zellij pane running `sudo -v`, which prompts for password
+    // and then exits. The pane closes after authentication.
+    await run("zellij", [
+      "run",
+      "--close-on-exit",
+      "--name", "sudo-auth",
+      "--",
+      "sudo",
+      "-v",
+    ]);
+  } else if (isInTmux()) {
+    // Fallback: split a tmux pane for sudo -v
+    await run("tmux", [
+      "split-window",
+      "-h",
+      "-l", "30",
+      "sudo -v; sleep 1",
+    ]);
+  }
+}
+
 // ── ensureSudo — the core flow ────────────────────────────────────────────
 
 async function ensureSudo(ctx: any, signal?: AbortSignal): Promise<boolean> {
@@ -113,18 +148,39 @@ async function ensureSudo(ctx: any, signal?: AbortSignal): Promise<boolean> {
     return false;
   }
 
+  const inZellij = isInZellij();
+  const inTmux = isInTmux();
+
   for (let attempt = 0; attempt < 3; attempt++) {
-    const hint =
-      attempt > 0
-        ? "Still no sudo credentials detected. Try running 'sudo -v' again in another terminal or SSH session."
-        : "This action requires sudo.";
+    if (inZellij || inTmux) {
+      // In a multiplexer: open a pane for sudo -v
+      const hint =
+        attempt > 0
+          ? "Still no sudo credentials. A new pane has been opened for `sudo -v` — enter your password there."
+          : "This action requires sudo. Opening a pane for authentication.";
 
-    const confirmed = await ctx.ui.confirm(
-      "Privilege Required",
-      `${hint}\n\nOpen another terminal or SSH session and run:\n  sudo -v\n\nThen press Enter here.`,
-    );
+      await openSudoPane();
 
-    if (!confirmed) return false;
+      const confirmed = await ctx.ui.confirm(
+        "Privilege Required",
+        `${hint}\n\nEnter your password in the new pane, then press Enter here.`,
+      );
+
+      if (!confirmed) return false;
+    } else {
+      // Not in a multiplexer: ask user to open another session
+      const hint =
+        attempt > 0
+          ? "Still no sudo credentials detected. Try running 'sudo -v' again in another terminal or SSH session."
+          : "This action requires sudo.";
+
+      const confirmed = await ctx.ui.confirm(
+        "Privilege Required",
+        `${hint}\n\nOpen another terminal or SSH session and run:\n  sudo -v\n\nThen press Enter here.`,
+      );
+
+      if (!confirmed) return false;
+    }
 
     if (await probeSudo(signal)) {
       updateFooter(ctx);
@@ -222,6 +278,7 @@ export default function sudoAuthExtension(pi: ExtensionAPI) {
 
       const lines: string[] = [];
       lines.push(`sudo: ${active ? "active" : "inactive"}`);
+      lines.push(`multiplexer: ${isInZellij() ? "zellij" : isInTmux() ? "tmux" : "none"}`);
       if (state.lastConfirmed) {
         const when = new Date(state.lastConfirmed).toISOString().replace("T", " ").slice(0, 19);
         lines.push(`last confirmed: ${when}`);
@@ -245,7 +302,10 @@ export default function sudoAuthExtension(pi: ExtensionAPI) {
       if (active) {
         ctx.ui.notify(`✓ sudo is active (${formatRemaining(estimatedRemaining())} remaining)`, "info");
       } else {
-        ctx.ui.notify("✗ sudo is inactive — run 'sudo -v' in another terminal to authenticate", "warning");
+        const hint = isInZellij() || isInTmux()
+          ? "✗ sudo is inactive — a pane will open for `sudo -v` on next sudo command"
+          : "✗ sudo is inactive — run 'sudo -v' in another terminal to authenticate";
+        ctx.ui.notify(hint, "warning");
       }
     },
   });
