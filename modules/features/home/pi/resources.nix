@@ -22,7 +22,6 @@
     llm-wiki = llmWikiRoot;
     nixpi = piBundleRoot + "/extensions/nixpi/nixpi";
     nixpi-permissions = piBundleRoot + "/extensions/nixpi/nixpi-permissions";
-    os = piBundleRoot + "/extensions/nixpi/os";
     subagent = piBundleRoot + "/extensions/nixpi/subagent";
     zz-synthetic-search = piBundleRoot + "/extensions/nixpi/zz-synthetic-search";
   };
