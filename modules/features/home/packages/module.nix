@@ -110,6 +110,7 @@
             --name whatsapp-qr \
             -- bash -lc '
               set -euo pipefail
+              export TERM=xterm-256color
               qr_path=/var/lib/nixpi-gateway/whatsapp/whatsapp-qr.txt
               last=""
               while true; do
