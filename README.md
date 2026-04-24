@@ -112,12 +112,20 @@ Pi seeds a Nix-managed `~/.pi/agent/models.json` for custom providers:
 - `synthetic` — OpenAI-compatible, authenticated via `SYNTHETIC_API_KEY`
 - `llama` — local llama.cpp endpoint on `evo-nixos`
 
-Typical shell setup before launching `pi`:
+Quick shell setup before launching `pi`:
 
 ```bash
 export SYNTHETIC_API_KEY=your_synthetic_key
 pi
 ```
+
+Preferred persistent setup:
+
+- store the key in `~/.config/nixos-secrets/synthetic-api-key`
+- open a new shell or re-login
+- launch `pi`
+
+This keeps the key out of the Nix store while preserving it across rebuilds.
 
 ### Privileged PI flows
 

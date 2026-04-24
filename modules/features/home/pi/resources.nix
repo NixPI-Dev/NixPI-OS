@@ -245,18 +245,27 @@ in {
   home.sessionVariables.PI_LLM_WIKI_ALLOWED_DOMAINS = "technical,personal";
 
   # ── Synthetic API key from local secret file ────────────────────────────
-  # Set a placeholder so the session-var file is generated; activation
-  # overwrites it with the real key from ~/.config/nixos-secrets/.
-  home.sessionVariables.SYNTHETIC_API_KEY = "PLACEHOLDER_SYNTHETIC_KEY";
+  # Keep the secret outside the Nix store. Activation mirrors it into a
+  # user-writable environment.d file so rebuilt hosts keep the setting.
   home.activation.syntheticApiKey = lib.hm.dag.entryAfter ["writeBoundary"] ''
     keyFile="$HOME/.config/nixos-secrets/synthetic-api-key"
+    envdDir="$HOME/.config/environment.d"
+    envd="$envdDir/90-synthetic-api-key.conf"
+
+    mkdir -p "$envdDir"
+
     if [ -f "$keyFile" ]; then
-      key=$(cat "$keyFile" | tr -d '[:space:]')
-      envd="$HOME/.config/environment.d/10-home-manager.conf"
-      if [ -f "$envd" ]; then
-        ${pkgs.gnused}/bin/sed -i \
-          "s|SYNTHETIC_API_KEY=.*|SYNTHETIC_API_KEY=$key|" "$envd"
+      key=$(tr -d '[:space:]' < "$keyFile")
+      if [ -n "$key" ]; then
+        tmp=$(mktemp "$envd.XXXXXX")
+        printf 'SYNTHETIC_API_KEY=%s\n' "$key" > "$tmp"
+        chmod 600 "$tmp"
+        mv "$tmp" "$envd"
+      else
+        rm -f "$envd"
       fi
+    else
+      rm -f "$envd"
     fi
   '';
 
