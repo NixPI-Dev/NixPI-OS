@@ -19,91 +19,18 @@
   bundledPiExtensions = {
     nixpi = piBundleRoot + "/extensions/nixpi/nixpi";
     subagent = piBundleRoot + "/extensions/nixpi/subagent";
-    zz-synthetic-search = piBundleRoot + "/extensions/nixpi/zz-synthetic-search";
+    synthetic = piBundleRoot + "/extensions/nixpi/synthetic";
   };
 
   # ── Local llama models — set per-host via pi.llamaModels ─────────────────
   llamaModels = config.pi.llamaModels;
   packageSources = config.pi.packageSources;
 
-  # Build enabled model IDs for PI settings.json.
-  syntheticModelIds = [
-    "synthetic/hf:zai-org/GLM-5.1"
-    "synthetic/hf:moonshotai/Kimi-K2.5"
-    "synthetic/hf:MiniMaxAI/MiniMax-M2.5"
-    "synthetic/hf:Qwen/Qwen3-Coder-480B-A35B-Instruct"
-  ];
-
+  # Synthetic provider is now registered dynamically by the synthetic
+  # PI extension (pi-bundle/extensions/nixpi/synthetic/). models.json
+  # only contains local llama providers if configured per-host.
   llamaModelIds = map (m: "llama/${m.id}") llamaModels;
   hasLlama = llamaModels != [];
-
-  syntheticProvider = {
-    baseUrl = "https://api.synthetic.new/openai/v1";
-    apiKey = "!cat ${config.pi.syntheticApiKeyFile}";
-    api = "openai-completions";
-    compat = {
-      supportsDeveloperRole = false;
-      supportsReasoningEffort = false;
-    };
-    models = [
-      {
-        id = "hf:zai-org/GLM-5.1";
-        name = "GLM 5.1 (Synthetic)";
-        reasoning = true;
-        input = ["text"];
-        contextWindow = 196608;
-        maxTokens = 65536;
-        cost = {
-          input = 0;
-          output = 0;
-          cacheRead = 0;
-          cacheWrite = 0;
-        };
-      }
-      {
-        id = "hf:moonshotai/Kimi-K2.5";
-        name = "Kimi K2.5 (Synthetic)";
-        reasoning = true;
-        input = ["text" "image"];
-        contextWindow = 262144;
-        maxTokens = 65536;
-        cost = {
-          input = 0;
-          output = 0;
-          cacheRead = 0;
-          cacheWrite = 0;
-        };
-      }
-      {
-        id = "hf:MiniMaxAI/MiniMax-M2.5";
-        name = "MiniMax M2.5 (Synthetic)";
-        reasoning = true;
-        input = ["text"];
-        contextWindow = 196608;
-        maxTokens = 65536;
-        cost = {
-          input = 0;
-          output = 0;
-          cacheRead = 0;
-          cacheWrite = 0;
-        };
-      }
-      {
-        id = "hf:Qwen/Qwen3-Coder-480B-A35B-Instruct";
-        name = "Qwen3 Coder 480B A35B Instruct (Synthetic)";
-        reasoning = true;
-        input = ["text"];
-        contextWindow = 262144;
-        maxTokens = 65536;
-        cost = {
-          input = 0;
-          output = 0;
-          cacheRead = 0;
-          cacheWrite = 0;
-        };
-      }
-    ];
-  };
 
   llamaProvider = {
     baseUrl = "http://127.0.0.1:8080/v1";
@@ -118,13 +45,9 @@
   };
 
   piModelsBase = {
-    providers =
-      {
-        synthetic = syntheticProvider;
-      }
-      // lib.optionalAttrs hasLlama {
-        llama = llamaProvider;
-      };
+    providers = lib.optionalAttrs hasLlama {
+      llama = llamaProvider;
+    };
   };
 
   piModelsBaseJson = pkgs.writeText "pi-models-base.json" (builtins.toJSON piModelsBase);
@@ -255,7 +178,7 @@ in {
   # ── PI extensions — in-house (NixPI-Dev) ─────────────────────────────────
   home.file.".pi/agent/extensions/nixpi".source = bundledPiExtensions.nixpi;
   home.file.".pi/agent/extensions/subagent".source = bundledPiExtensions.subagent;
-  home.file.".pi/agent/extensions/zz-synthetic-search".source = bundledPiExtensions.zz-synthetic-search;
+  home.file.".pi/agent/extensions/synthetic".source = bundledPiExtensions.synthetic;
 
   # ── PI extensions — public/third-party (future) ──────────────────────────
   # Add home.file entries for public extensions under ./extensions/public/ here.
@@ -291,6 +214,7 @@ in {
     "R %h/.pi/agent/extensions/llm-wiki - - - - -"
     "R %h/.pi/agent/extensions/nixpi-permissions - - - - -"
     "R %h/.pi/agent/guardrails.yaml - - - - -"
+    "R %h/.pi/agent/extensions/zz-synthetic-search - - - - -"
     "R %h/.config/environment.d/90-synthetic-api-key.conf - - - - -"
   ];
 
