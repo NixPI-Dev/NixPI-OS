@@ -4,7 +4,6 @@
   pkgs,
   ...
 }: let
-  piWebAccessRoot = "${pkgs.pi-web-access}/share/pi-web-access";
   piBundleRoot = ../../../../pi-bundle;
 
   technicalWikiDir = config.nixpi.wiki.technical;
@@ -273,7 +272,6 @@ in {
   home.file.".pi/agent/agents/reviewer.md".source = piBundleRoot + "/agents/reviewer.md";
 
   # ── PI generated config ──────────────────────────────────────────────────
-  home.file.".pi/web-search.json".text = "${builtins.toJSON config.pi.webAccessConfig}\n";
   # models.json is fully declarative (available model definitions).
   home.file.".pi/agent/models.json".source = piModelsBaseJson;
 
