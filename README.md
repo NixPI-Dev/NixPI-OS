@@ -108,8 +108,7 @@ Typical consumption pattern from a private fleet config:
 The Pi runtime includes several capabilities:
 
 - `os` extension — `system_health`, `nixos_update`, `systemd_control`, `schedule_reboot`
-- `nixpi` extension — `nixpi_status`, `nixpi_evolution_note`, `/nixpi status`, plus wiki capture, search, scaffolding, linting, persona context, and compaction context
-- `nixpi-permissions` extension — deny-only guard for dangerous Pi shell commands
+- `nixpi` extension — `nixpi_status`, `nixpi_evolution_note`, `/nixpi status`, wiki capture, search, scaffolding, linting, persona context, compaction context, and deny-only guards for dangerous Pi shell commands
 - `subagent` extension — isolated helper agents (scout/planner/worker/reviewer)
 - restored PI skills — `wiki`, `os-operations`, `self-evolution`
 

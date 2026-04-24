@@ -19,7 +19,6 @@
 
   bundledPiExtensions = {
     nixpi = piBundleRoot + "/extensions/nixpi/nixpi";
-    nixpi-permissions = piBundleRoot + "/extensions/nixpi/nixpi-permissions";
     subagent = piBundleRoot + "/extensions/nixpi/subagent";
     zz-synthetic-search = piBundleRoot + "/extensions/nixpi/zz-synthetic-search";
   };
@@ -220,7 +219,6 @@ in {
 
   # ── PI extensions — in-house (NixPI-Dev) ─────────────────────────────────
   home.file.".pi/agent/extensions/nixpi".source = bundledPiExtensions.nixpi;
-  home.file.".pi/agent/extensions/nixpi-permissions".source = bundledPiExtensions.nixpi-permissions;
   home.file.".pi/agent/extensions/subagent".source = bundledPiExtensions.subagent;
   home.file.".pi/agent/extensions/zz-synthetic-search".source = bundledPiExtensions.zz-synthetic-search;
 
@@ -303,6 +301,7 @@ in {
   home.activation.piCavemanLiteCleanup = lib.hm.dag.entryAfter ["writeBoundary"] ''
     rm -rf "$HOME/.pi/agent/git/github.com/NixPI-Dev/NixPI-Caveman-Lite"
     rm -f "$HOME/.pi/agent/extensions/llm-wiki"
+    rm -f "$HOME/.pi/agent/extensions/nixpi-permissions"
     rm -f "$HOME/.pi/agent/guardrails.yaml"
     rm -f "$HOME/.config/environment.d/90-synthetic-api-key.conf"
   '';

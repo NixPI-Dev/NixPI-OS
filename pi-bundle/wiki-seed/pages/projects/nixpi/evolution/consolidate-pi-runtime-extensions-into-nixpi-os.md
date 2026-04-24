@@ -23,7 +23,7 @@ updated: 2026-04-24
 NixPI previously shipped PI runtime behavior from three repositories:
 
 - `NixPI-LLM-Wiki` provided wiki tools, persona context, caveman-lite state, compaction context, and wiki path protection
-- `nixpi-permissions` provides the deny-only shell guard for PI agent and user shell hooks
+- `nixpi-permissions` provided the deny-only shell guard for PI agent and user shell hooks before it was merged into the main `nixpi` extension
 - `NixPI-OS` provides the PI bundle, OS wiring, status command, subagents, search extension, prompts, skills, wiki seed, and evolution notes
 
 That split creates coordination cost for changes that naturally span one runtime lifecycle. Extension hooks such as `session_start`, `tool_call`, and `before_agent_start` are configured and deployed together, but changes currently require separate repo updates, separate flake input updates, and cross-repo validation.
@@ -49,7 +49,7 @@ The wiki runtime now carries NixPI-specific persona, compaction, and guardrail b
 - a rebuilt host contains:
   - `~/.pi/agent/extensions/nixpi/index.ts`
   - `~/.pi/agent/extensions/nixpi/wiki/index.ts`
-  - `~/.pi/agent/extensions/nixpi-permissions/index.ts`
+  - no separate `~/.pi/agent/extensions/nixpi-permissions/index.ts`
   - no active Home Manager dependency on a separate `NixPI-LLM-Wiki` checkout
 
 ## Rollout
@@ -70,7 +70,7 @@ If the `nixpi-wiki` merge breaks tests or runtime extension loading:
 3. point the standalone wiki extension path back to the restored package
 4. rebuild the host
 
-If `nixpi-permissions` breaks after consolidation, disable only `~/.pi/agent/extensions/nixpi-permissions` while keeping the rest of the PI bundle active.
+If the permissions guard breaks after consolidation, disable the guard in the main `nixpi` extension or roll back the merged `permissions.ts` change.
 
 ## Linked files
 
@@ -81,6 +81,6 @@ If `nixpi-permissions` breaks after consolidation, disable only `~/.pi/agent/ext
 - `~/NixPI/repos/NixPI-OS/modules/features/home/nixpi-paths/module.nix`
 - `~/NixPI/repos/NixPI-OS/modules/features/nixos/nixpi-paths/module.nix`
 - `~/NixPI/repos/NixPI-OS/pi-bundle/extensions/nixpi/nixpi/wiki/`
-- `~/NixPI/repos/NixPI-OS/pi-bundle/extensions/nixpi/nixpi-permissions/`
+- `~/NixPI/repos/NixPI-OS/pi-bundle/extensions/nixpi/nixpi/permissions.ts`
 - `~/NixPI/repos/NixPI-LLM-Wiki/`
 - `~/NixPI/repos/nixpi-permissions/`

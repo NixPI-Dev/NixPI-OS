@@ -1,4 +1,6 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 interface PermissionConfig {
   deny?: string[];
@@ -27,17 +29,14 @@ function matchesRule(tool: string, command: string, rule: unknown): boolean {
 }
 
 function loadConfig(cwd: string): PermissionConfig {
-  const fs = require("fs") as typeof import("fs");
-  const path = require("path") as typeof import("path");
-
   const candidates = [
-    path.join(cwd, ".pi", "permissions.json"),
-    path.join(process.env.HOME || "/root", ".pi", "agent", "permissions.json"),
+    join(cwd, ".pi", "permissions.json"),
+    join(process.env.HOME || "/root", ".pi", "agent", "permissions.json"),
   ];
 
   for (const candidate of candidates) {
     try {
-      const raw = fs.readFileSync(candidate, "utf8");
+      const raw = readFileSync(candidate, "utf8");
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === "object") return parsed as PermissionConfig;
     } catch {
@@ -61,7 +60,7 @@ const NIXPI_DENY: Array<{ pattern: string; description?: string }> = [
   { pattern: "Bash(:(){ *)", description: "fork bomb" },
 ];
 
-export default function nixpiPermissionsExtension(pi: ExtensionAPI) {
+export default function registerPermissionsHooks(pi: ExtensionAPI) {
   let config: PermissionConfig = {};
 
   const getAllDeny = () => [
@@ -83,7 +82,7 @@ export default function nixpiPermissionsExtension(pi: ExtensionAPI) {
     config = loadConfig(ctx.cwd);
     const denyCount = (config.deny?.length ?? 0) + NIXPI_DENY.length;
     if (ctx.hasUI) {
-      ctx.ui.notify(`nixpi-permissions loaded: deny-only mode, ${denyCount} deny rules`, "info");
+      ctx.ui.notify(`NixPI permissions loaded: deny-only mode, ${denyCount} deny rules`, "info");
     }
   });
 
