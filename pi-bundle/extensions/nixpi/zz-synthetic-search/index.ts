@@ -1,12 +1,17 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { Type } from "@sinclair/typebox";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 
 const SYNTHETIC_SEARCH_URL = "https://api.synthetic.new/v2/search";
 const SEARCH_CACHE_DIR = join(process.env.HOME || "/tmp", ".pi", "agent", "synthetic-search-cache");
 const SYNTHETIC_API_KEY_ENV = "SYNTHETIC_API_KEY";
+const SYNTHETIC_API_KEY_FILE_ENV = "PI_SYNTHETIC_API_KEY_FILE";
+const DEFAULT_SYNTHETIC_API_KEY_FILES = [
+  "/run/secrets/synthetic_api_key",
+  join(process.env.HOME || "/tmp", ".config", "nixos-secrets", "synthetic-api-key"),
+];
 
 const WebSearchParams = Type.Object({
   query: Type.Optional(Type.String({ description: "Single search query." })),
@@ -40,12 +45,31 @@ type CachedResponse = {
   queries: CachedQuery[];
 };
 
+function syntheticApiKeyFileCandidates(): string[] {
+  const configured = process.env[SYNTHETIC_API_KEY_FILE_ENV]?.trim();
+  return [configured, ...DEFAULT_SYNTHETIC_API_KEY_FILES].filter((value, index, items): value is string => {
+    return Boolean(value) && items.indexOf(value) === index;
+  });
+}
+
+function readSyntheticApiKeyFromFile(path: string): string | null {
+  if (!existsSync(path)) return null;
+  const apiKey = readFileSync(path, "utf8").trim();
+  return apiKey || null;
+}
+
 function readSyntheticApiKey(): string {
-  const apiKey = process.env[SYNTHETIC_API_KEY_ENV]?.trim();
-  if (!apiKey) {
-    throw new Error(`Synthetic API key not available in ${SYNTHETIC_API_KEY_ENV}`);
+  for (const path of syntheticApiKeyFileCandidates()) {
+    const apiKey = readSyntheticApiKeyFromFile(path);
+    if (apiKey) return apiKey;
   }
-  return apiKey;
+
+  const apiKey = process.env[SYNTHETIC_API_KEY_ENV]?.trim();
+  if (apiKey) return apiKey;
+
+  throw new Error(
+    `Synthetic API key not available in ${SYNTHETIC_API_KEY_ENV} or ${SYNTHETIC_API_KEY_FILE_ENV}`,
+  );
 }
 
 function ensureCacheDir(): void {
@@ -124,7 +148,11 @@ function formatQueries(queries: CachedQuery[]): string {
 }
 
 export default function syntheticSearchExtension(pi: ExtensionAPI) {
-  if (!process.env[SYNTHETIC_API_KEY_ENV]?.trim()) return;
+  try {
+    readSyntheticApiKey();
+  } catch {
+    return;
+  }
 
   pi.registerTool({
     name: "web_search",

@@ -239,6 +239,7 @@ in {
   home.sessionVariables.PI_LLM_WIKI_DIR_PERSONAL = personalWikiDir;
   home.sessionVariables.PI_LLM_WIKI_ROOTS = "technical:${technicalWikiDir},personal:${personalWikiDir}";
   home.sessionVariables.PI_LLM_WIKI_ALLOWED_DOMAINS = "technical,personal";
+  home.sessionVariables.PI_SYNTHETIC_API_KEY_FILE = config.pi.syntheticApiKeyFile;
 
   # ── Synthetic API key from runtime secret file ──────────────────────────
   # Keep the secret outside the Nix store. Activation mirrors it into a
@@ -311,8 +312,24 @@ in {
   # ── Activation: Pi custom providers/models (declarative) ─────────────────
   home.activation.piModels = lib.hm.dag.entryAfter ["writeBoundary"] ''
     models_path="$HOME/.pi/agent/models.json"
+    key_file="${config.pi.syntheticApiKeyFile}"
     mkdir -p "$(dirname "$models_path")"
-    cp ${piModelsBaseJson} "$models_path.tmp"
+
+    if [ -f "$key_file" ]; then
+      synthetic_key=$(tr -d '[:space:]' < "$key_file")
+    else
+      synthetic_key=""
+    fi
+
+    if [ -n "$synthetic_key" ]; then
+      ${pkgs.jq}/bin/jq \
+        --arg syntheticKey "$synthetic_key" \
+        '.providers.synthetic.apiKey = $syntheticKey' \
+        ${piModelsBaseJson} > "$models_path.tmp"
+    else
+      cp ${piModelsBaseJson} "$models_path.tmp"
+    fi
+
     chmod 0600 "$models_path.tmp"
     mv "$models_path.tmp" "$models_path"
   '';
