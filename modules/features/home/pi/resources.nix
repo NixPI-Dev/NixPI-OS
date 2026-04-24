@@ -326,14 +326,6 @@ in {
     fi
   '';
 
-  # Remove obsolete privilege helper extensions.
-  home.activation.piSudoCleanup = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    rm -rf "$HOME/.pi/agent/extensions/sudo-prompt"
-    rm -rf "$HOME/.pi/agent/extensions/sudo-handoff"
-    rm -rf "$HOME/.pi/agent/extensions/tmux-manager"
-    rm -rf "$HOME/.pi/agent/extensions/sudo-auth"
-  '';
-
   # Remove the old runtime-installed Caveman Lite git package (now declarative).
   home.activation.piCavemanLiteCleanup = lib.hm.dag.entryAfter ["writeBoundary"] ''
     rm -rf "$HOME/.pi/agent/git/github.com/NixPI-Dev/NixPI-Caveman-Lite"
