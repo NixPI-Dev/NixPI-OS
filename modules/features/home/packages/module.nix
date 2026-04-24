@@ -121,7 +121,7 @@
                   clear
                   printf "WhatsApp pairing QR\n\n"
                   if [ -n "$current" ]; then
-                    printf "%s" "$current" | qrencode -t ANSIUTF8
+                    printf "%s" "$current" | ${pkgs.qrencode}/bin/qrencode -t ANSIUTF8
                     printf "\nLive source: %s\n" "$qr_path"
                     printf "Updates automatically when WhatsApp rotates the QR.\n"
                   else
