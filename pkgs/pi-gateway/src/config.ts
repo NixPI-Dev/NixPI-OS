@@ -16,6 +16,8 @@ export type WhatsAppTransportConfig = {
   adminNumbers: string[];
   directMessagesOnly: boolean;
   sessionDataPath: string;
+  model?: string;
+  allowedModels?: string[];
   chromiumExecutablePath?: string;
   headless?: boolean;
 };

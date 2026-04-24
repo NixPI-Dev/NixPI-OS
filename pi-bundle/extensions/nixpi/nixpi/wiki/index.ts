@@ -141,6 +141,17 @@ function buildWikiContextPrompt(): string {
 	].join("\n");
 }
 
+function buildWikiPromptAdditions(cavemanLiteEnabled: boolean, restoredContext: SavedContext | null): string {
+	const blocks = [
+		buildWikiContextPrompt(),
+		buildWikiDigest(getWikiRoot()),
+		buildPersonaPromptBlock(),
+		cavemanLiteEnabled ? buildCavemanPromptBlock() : "",
+		restoredContext ? restoredContextBlock(restoredContext) : "",
+	].filter(Boolean);
+	return blocks.join("");
+}
+
 export default function (pi: ExtensionAPI) {
 	const dirtyRoots = new Set<string>();
 	let cavemanLiteEnabled = true;
@@ -314,15 +325,9 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.on("before_agent_start", async (event) => {
-		const wikiContext = buildWikiContextPrompt();
-		const digest = buildWikiDigest(getWikiRoot());
-		const persona = buildPersonaPromptBlock();
-		const caveman = cavemanLiteEnabled ? buildCavemanPromptBlock() : "";
-		let systemPrompt = `${event.systemPrompt}${wikiContext}${digest}${persona}${caveman}`;
-		if (restoredContext) {
-			systemPrompt += restoredContextBlock(restoredContext);
-			restoredContext = null;
-		}
+		const contextForPrompt = restoredContext;
+		const systemPrompt = `${event.systemPrompt}${buildWikiPromptAdditions(cavemanLiteEnabled, contextForPrompt)}`;
+		restoredContext = null;
 		return { systemPrompt };
 	});
 

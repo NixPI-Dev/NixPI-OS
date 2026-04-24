@@ -83,7 +83,12 @@ export default function registerPermissionsHooks(pi: ExtensionAPI) {
     const denyCount = (config.deny?.length ?? 0) + NIXPI_DENY.length;
     if (ctx.hasUI) {
       ctx.ui.notify(`NixPI permissions loaded: deny-only mode, ${denyCount} deny rules`, "info");
+      ctx.ui.setStatus("permissions", `permissions: deny-only (${denyCount} rules)`);
     }
+  });
+
+  pi.on("session_shutdown", async (_event, ctx) => {
+    if (ctx.hasUI) ctx.ui.setStatus("permissions", "");
   });
 
   pi.on("tool_call", async (event) => {
