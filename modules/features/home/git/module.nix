@@ -5,6 +5,8 @@
       init.defaultBranch = "main";
       pull.rebase = false;
       core.editor = "nvim";
+      # Allow pushing to bare repos owned by the git group (local /srv/git)
+      safe.directory = "/srv/git/*";
     };
   };
 
