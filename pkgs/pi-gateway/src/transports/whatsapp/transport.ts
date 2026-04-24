@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import makeWASocket, {
   DisconnectReason,
@@ -223,11 +223,12 @@ export class WhatsAppBaileysTransport {
 
     if (qr) {
       console.log("WhatsApp QR received. Pair the dedicated Pi account to continue.");
-      await this.saveQrImage(qr);
+      await Promise.all([this.saveQrImage(qr), this.saveQrPayload(qr)]);
     }
 
     if (connection === "open" && !ready.settled) {
       console.log("WhatsApp client ready — receiving messages.");
+      await this.clearQrPayload();
       ready.resolve();
       return;
     }
@@ -280,6 +281,24 @@ export class WhatsAppBaileysTransport {
     }
   }
 
+  private async saveQrPayload(qr: string): Promise<void> {
+    try {
+      const qrTextPath = this.getQrTextPath();
+      await writeFile(qrTextPath, `${qr.trim()}\n`, "utf-8");
+      console.log(`WhatsApp QR payload saved as text: ${qrTextPath}`);
+    } catch (err) {
+      console.error("Failed to save QR payload:", err);
+    }
+  }
+
+  private async clearQrPayload(): Promise<void> {
+    try {
+      await rm(this.getQrTextPath(), { force: true });
+    } catch (err) {
+      console.error("Failed to clear QR payload:", err);
+    }
+  }
+
   private async loadLidMappings(): Promise<void> {
     try {
       const raw = await readFile(this.getLidMapPath(), "utf-8");
@@ -310,6 +329,10 @@ export class WhatsAppBaileysTransport {
 
   private getQrPath(): string {
     return path.resolve(this.config.sessionDataPath, "..", "whatsapp-qr.png");
+  }
+
+  private getQrTextPath(): string {
+    return path.resolve(this.config.sessionDataPath, "..", "whatsapp-qr.txt");
   }
 
   private requireSocket(): WASocket {

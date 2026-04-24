@@ -84,8 +84,9 @@ services.pi-gateway = {
 
   whatsapp = {
     enable = true;
-    trustedNumbers = [ "+15550002222" ];
-    adminNumbers = [ "+15550002222" ];
+    ownerNumbers = [ "+15550002222" ];
+    model = "hf:moonshotai/Kimi-K2.5";
+    allowedModels = [ "hf:moonshotai/Kimi-K2.5" ];
   };
 };
 ```
@@ -93,6 +94,11 @@ services.pi-gateway = {
 The Signal transport requires `signal-cli-rest-api` running at `http://127.0.0.1:8080` (configurable).
 
 The WhatsApp transport uses Baileys and persists auth state under the gateway state directory.
+The gateway account is selected by pairing the QR with the dedicated WhatsApp number; NixOS
+declares who may message it. For a single-owner personal gateway, set
+`services.pi-gateway.whatsapp.ownerNumbers = [ "+15550002222" ];` and leave
+`directMessagesOnly = true` (the default). The QR image is written next to the auth state,
+for example `/var/lib/nixpi-gateway/whatsapp/whatsapp-qr.png`.
 
 ### Home Manager
 

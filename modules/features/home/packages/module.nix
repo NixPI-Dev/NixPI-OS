@@ -10,6 +10,7 @@
       pkgs.coreutils
       pkgs.gnugrep
       pkgs.pi
+      pkgs.qrencode
       pkgs.zellij
     ];
     text = ''
@@ -23,13 +24,14 @@
       Usage: nixpi-tui [command] [args...]
 
       Commands:
-        attach        Attach to or create the main NixPI Zellij session
-        pi [args...]  Open PI in a pane rooted at $root
-        shell         Open a login shell pane rooted at $root
-        status        Ask PI for NixPI status in a pane
-        sudo [LABEL]  Open a small sudo authentication panel
-        run CMD...    Run an arbitrary command in a pane rooted at $root
-        watch         Watch the NixPI session read-only
+        attach         Attach to or create the main NixPI Zellij session
+        pi [args...]   Open PI in a pane rooted at $root
+        shell          Open a login shell pane rooted at $root
+        status         Ask PI for NixPI status in a pane
+        sudo [LABEL]   Open a small sudo authentication panel
+        run CMD...     Run an arbitrary command in a pane rooted at $root
+        whatsapp-qr    Open a floating pane that renders the live WhatsApp QR
+        watch          Watch the NixPI session read-only
 
       Environment:
         NIXPI_TUI_SESSION  Zellij session name (default: nixpi)
@@ -92,6 +94,45 @@
             exit 64
           fi
           exec zellij --session "$session" run --name command --cwd "$root" -- "$@"
+          ;;
+        whatsapp-qr)
+          if ! zellij list-sessions --short | grep -Fx -- "$session" >/dev/null; then
+            echo "NixPI Zellij session '$session' is not active. Run: nixpi-tui attach" >&2
+            exit 69
+          fi
+          exec zellij --session "$session" run \
+            --floating \
+            --width 86% \
+            --height 92% \
+            --x 7% \
+            --y 4% \
+            --name whatsapp-qr \
+            -- bash -lc '
+              set -euo pipefail
+              qr_path=/var/lib/nixpi-gateway/whatsapp/whatsapp-qr.txt
+              last=""
+              while true; do
+                current=""
+                if [ -r "$qr_path" ]; then
+                  current="$(tr -d "\r" < "$qr_path")"
+                fi
+                if [ "$current" != "$last" ]; then
+                  clear
+                  printf "WhatsApp pairing QR\n\n"
+                  if [ -n "$current" ]; then
+                    printf "%s" "$current" | qrencode -t ANSIUTF8
+                    printf "\nLive source: %s\n" "$qr_path"
+                    printf "Updates automatically when WhatsApp rotates the QR.\n"
+                  else
+                    printf "Waiting for a fresh WhatsApp QR or already paired.\n"
+                    printf "Expected source: %s\n" "$qr_path"
+                  fi
+                  printf "\nClose the pane after pairing.\n"
+                  last="$current"
+                fi
+                sleep 1
+              done
+            '
           ;;
         watch)
           exec zellij watch "$session"

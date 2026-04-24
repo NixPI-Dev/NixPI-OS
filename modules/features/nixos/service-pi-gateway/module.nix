@@ -6,7 +6,11 @@
 }: let
   cfg = config.services.pi-gateway;
   gatewayPackage = pkgs.callPackage ../../../../pkgs/pi-gateway {};
-  defaultWhatsAppModel = "hf:zai-org/GLM-4.7-Flash";
+  defaultWhatsAppModel = "hf:moonshotai/Kimi-K2.5";
+  normalizeSyntheticModel = model: lib.removePrefix "synthetic/" model;
+  whatsappTrustedNumbers = lib.unique (cfg.whatsapp.ownerNumbers ++ cfg.whatsapp.trustedNumbers);
+  whatsappAdminNumbers = lib.unique (cfg.whatsapp.ownerNumbers ++ cfg.whatsapp.adminNumbers);
+  whatsappAllowedModels = map normalizeSyntheticModel cfg.whatsapp.allowedModels;
 
   gatewayConfig = pkgs.writeText "nixpi-gateway.yml" (
     lib.generators.toYAML {} {
@@ -35,8 +39,8 @@
         // lib.optionalAttrs cfg.whatsapp.enable {
           whatsapp = {
             enabled = true;
-            trustedNumbers = cfg.whatsapp.trustedNumbers;
-            adminNumbers = cfg.whatsapp.adminNumbers;
+            trustedNumbers = whatsappTrustedNumbers;
+            adminNumbers = whatsappAdminNumbers;
             directMessagesOnly = cfg.whatsapp.directMessagesOnly;
             sessionDataPath = cfg.whatsapp.sessionDataPath;
             model = cfg.whatsapp.model;
@@ -161,16 +165,25 @@ in {
     whatsapp = {
       enable = lib.mkEnableOption "WhatsApp transport for pi-gateway";
 
+      ownerNumbers = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [];
+        description = ''
+          WhatsApp phone numbers in E.164 format that are both trusted and
+          admins. For a single-owner personal gateway, set only this option.
+        '';
+      };
+
       trustedNumbers = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [];
-        description = "WhatsApp phone numbers in E.164 format allowed to message Pi.";
+        description = "Additional WhatsApp phone numbers in E.164 format allowed to message Pi.";
       };
 
       adminNumbers = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [];
-        description = "WhatsApp phone numbers with admin access (subset of trustedNumbers).";
+        description = "Additional WhatsApp phone numbers with admin access (subset of trustedNumbers plus ownerNumbers).";
       };
 
       directMessagesOnly = lib.mkOption {
@@ -188,12 +201,12 @@ in {
       model = lib.mkOption {
         type = lib.types.str;
         default = defaultWhatsAppModel;
-        example = "hf:zai-org/GLM-4.7-Flash";
+        example = "hf:moonshotai/Kimi-K2.5";
         description = ''
           Synthetic model used for every WhatsApp Pi prompt.
           Accepts either a bare Synthetic model id such as
-          `hf:zai-org/GLM-4.7-Flash` or the full Pi model selector form
-          `synthetic/hf:zai-org/GLM-4.7-Flash`.
+          `hf:moonshotai/Kimi-K2.5` or the full Pi model selector form
+          `synthetic/hf:moonshotai/Kimi-K2.5`.
         '';
       };
 
@@ -201,7 +214,7 @@ in {
         type = lib.types.listOf lib.types.str;
         default = [defaultWhatsAppModel];
         example = [
-          "hf:zai-org/GLM-4.7-Flash"
+          "hf:moonshotai/Kimi-K2.5"
           "hf:deepseek-ai/DeepSeek-V3.2"
         ];
         description = ''
@@ -235,18 +248,25 @@ in {
         message = "services.pi-gateway.signal.allowedNumbers must not be empty when signal transport is enabled.";
       }
       {
-        assertion = cfg.whatsapp.enable -> cfg.whatsapp.trustedNumbers != [];
-        message = "services.pi-gateway.whatsapp.trustedNumbers must not be empty when whatsapp transport is enabled.";
+        assertion = cfg.whatsapp.enable -> whatsappTrustedNumbers != [];
+        message = "services.pi-gateway.whatsapp.ownerNumbers or trustedNumbers must not be empty when whatsapp transport is enabled.";
       }
       {
         assertion =
           cfg.whatsapp.enable
-          -> builtins.elem cfg.whatsapp.model cfg.whatsapp.allowedModels
-          || builtins.elem "synthetic/${cfg.whatsapp.model}" cfg.whatsapp.allowedModels
-          || (
-            lib.hasPrefix "synthetic/" cfg.whatsapp.model
-            && builtins.elem (lib.removePrefix "synthetic/" cfg.whatsapp.model) cfg.whatsapp.allowedModels
-          );
+          -> lib.all (number: builtins.match "^\\+[0-9]+$" number != null) whatsappTrustedNumbers;
+        message = "services.pi-gateway.whatsapp numbers must use E.164 format, e.g. +15550001111.";
+      }
+      {
+        assertion =
+          cfg.whatsapp.enable
+          -> lib.all (number: builtins.elem number whatsappTrustedNumbers) whatsappAdminNumbers;
+        message = "services.pi-gateway.whatsapp.adminNumbers must be included in ownerNumbers or trustedNumbers.";
+      }
+      {
+        assertion =
+          cfg.whatsapp.enable
+          -> builtins.elem (normalizeSyntheticModel cfg.whatsapp.model) whatsappAllowedModels;
         message = "services.pi-gateway.whatsapp.model must be included in services.pi-gateway.whatsapp.allowedModels.";
       }
     ];
