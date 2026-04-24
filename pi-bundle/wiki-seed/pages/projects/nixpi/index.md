@@ -8,7 +8,7 @@ aliases: []
 tags: [project, nixos, ai]
 domain: technical
 areas: [infrastructure, knowledge-system, ai]
-hosts: [evo-nixos]
+hosts: [vps-nixos]
 status: active
 validation_level: working
 review_cycle_days: 90
@@ -18,7 +18,7 @@ created: 2026-04-21
 updated: 2026-04-21
 projects: []
 people: [person/operator]
-systems: [host/evo-nixos, service/syncthing]
+systems: [host/vps-nixos, service/syncthing]
 sources: [source/capacities-object-model-research]
 related: [project/personal-second-brain, concept/object-based-knowledge-system, task/plan-wiki-migration, meeting/nixpi-weekly-sync-2026-04-25]
 source_ids: []
@@ -37,7 +37,7 @@ The project now includes a clean wiki rebuild, an object-based schema, and examp
 
 ## Key objects
 
-- [evo-nixos](../../resources/technical/evo-nixos.md)
+- [vps-nixos](../../resources/technical/vps-nixos.md)
 - [Syncthing](../../resources/technical/syncthing.md)
 - [Object-Based Knowledge System](../../resources/knowledge/object-based-knowledge-system.md)
 - [Capacities Object Model Research](../../sources/capacities-object-model-research.md)

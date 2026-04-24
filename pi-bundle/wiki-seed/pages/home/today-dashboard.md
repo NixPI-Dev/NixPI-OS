@@ -18,7 +18,7 @@ created: 2026-04-21
 updated: 2026-04-21
 projects: [project/personal-second-brain, project/nixpi]
 people: [person/operator]
-systems: [host/evo-nixos]
+systems: [host/vps-nixos]
 sources: []
 related: [journal/2026-04-21, task/plan-wiki-migration, meeting/nixpi-weekly-sync-2026-04-25, reminder/review-wiki-structure-2026-05-21]
 source_ids: []
@@ -50,5 +50,5 @@ summary: Example daily dashboard showing how tasks, events, reminders, projects,
 
 ## Key systems
 
-- [evo-nixos](../resources/technical/evo-nixos.md)
+- [vps-nixos](../resources/technical/vps-nixos.md)
 - [Syncthing](../resources/technical/syncthing.md)

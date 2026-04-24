@@ -18,7 +18,7 @@ created: 2026-04-21
 updated: 2026-04-21
 projects: [project/nixpi, project/personal-second-brain]
 people: [person/operator]
-systems: [host/evo-nixos, service/syncthing]
+systems: [host/vps-nixos, service/syncthing]
 sources: [source/capacities-object-model-research]
 related: [home/start-here, home/object-map]
 source_ids: []

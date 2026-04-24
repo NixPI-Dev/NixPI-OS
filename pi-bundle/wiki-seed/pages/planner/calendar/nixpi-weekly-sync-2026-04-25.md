@@ -8,7 +8,7 @@ aliases: []
 tags: [meeting, sync]
 domain: technical
 areas: [infrastructure, knowledge-system]
-hosts: [evo-nixos]
+hosts: [vps-nixos]
 status: scheduled
 validation_level: seed
 start: 2026-04-25 10:00
@@ -18,7 +18,7 @@ created: 2026-04-21
 updated: 2026-04-21
 projects: [project/nixpi]
 people: [person/operator]
-systems: [host/evo-nixos]
+systems: [host/vps-nixos]
 sources: []
 related: [task/plan-wiki-migration]
 completed:
@@ -38,4 +38,4 @@ summary: Example meeting note for reviewing the wiki build, migration plan, and 
 
 - [NixPI](../../projects/nixpi/index.md)
 - [Plan Wiki Migration](../tasks/plan-wiki-migration.md)
-- [evo-nixos](../../resources/technical/evo-nixos.md)
+- [vps-nixos](../../resources/technical/vps-nixos.md)

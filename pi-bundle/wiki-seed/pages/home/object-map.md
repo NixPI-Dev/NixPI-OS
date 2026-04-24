@@ -18,7 +18,7 @@ created: 2026-04-21
 updated: 2026-04-21
 projects: [project/nixpi, project/personal-second-brain]
 people: [person/operator]
-systems: [host/evo-nixos, service/syncthing]
+systems: [host/vps-nixos, service/syncthing]
 sources: [source/capacities-object-model-research]
 related: [concept/object-based-knowledge-system, home/start-here]
 source_ids: []
@@ -45,7 +45,7 @@ summary: Example map of the main object types used in the new wiki.
 ## People and systems
 
 - [Operator](../resources/people/operator.md)
-- [evo-nixos](../resources/technical/evo-nixos.md)
+- [vps-nixos](../resources/technical/vps-nixos.md)
 - [Syncthing](../resources/technical/syncthing.md)
 
 ## Concepts and sources

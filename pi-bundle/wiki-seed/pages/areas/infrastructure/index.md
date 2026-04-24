@@ -8,7 +8,7 @@ aliases: []
 tags: [area, infrastructure]
 domain: technical
 areas: [infrastructure]
-hosts: [evo-nixos]
+hosts: [vps-nixos]
 status: active
 validation_level: working
 review_cycle_days: 90
@@ -18,7 +18,7 @@ created: 2026-04-21
 updated: 2026-04-21
 projects: [project/nixpi]
 people: [person/operator]
-systems: [host/evo-nixos, service/syncthing]
+systems: [host/vps-nixos, service/syncthing]
 sources: []
 related: [concept/object-based-knowledge-system]
 source_ids: []
@@ -33,7 +33,7 @@ Machines, services, sync, and operational continuity.
 
 ## Key objects
 
-- [evo-nixos](../../resources/technical/evo-nixos.md)
+- [vps-nixos](../../resources/technical/vps-nixos.md)
 - [Syncthing](../../resources/technical/syncthing.md)
 - [NixPI](../../projects/nixpi/index.md)
 

@@ -23,7 +23,7 @@ describe("frontmatter", () => {
         type: "concept",
         title: "System Landscape",
         tags: ["nixos", "pi"],
-        hosts: ["pad-nixos"],
+        hosts: ["yoga-nixos"],
         domain: "technical",
         areas: ["infrastructure", "ai"],
       },
@@ -35,7 +35,7 @@ describe("frontmatter", () => {
       type: "concept",
       title: "System Landscape",
       tags: ["nixos", "pi"],
-      hosts: ["pad-nixos"],
+      hosts: ["yoga-nixos"],
       domain: "technical",
       areas: ["infrastructure", "ai"],
     });
@@ -46,7 +46,7 @@ describe("frontmatter", () => {
     const parsed = parseFrontmatter(`---
 aliases: foo, bar
 tags: one, two
-hosts: pad-nixos, evo-nixos
+hosts: yoga-nixos, vps-nixos
 areas: infra, ai
 ---
 body
@@ -54,7 +54,7 @@ body
 
     expect(parsed.attributes.aliases).toEqual(["foo", "bar"]);
     expect(parsed.attributes.tags).toEqual(["one", "two"]);
-    expect(parsed.attributes.hosts).toEqual(["pad-nixos", "evo-nixos"]);
+    expect(parsed.attributes.hosts).toEqual(["yoga-nixos", "vps-nixos"]);
     expect(parsed.attributes.areas).toEqual(["infra", "ai"]);
   });
 

@@ -76,7 +76,7 @@ Pages and captured sources may include an optional frontmatter field:
 
 ```yaml
 hosts:
-  - pad-nixos
+  - yoga-nixos
 ```
 
 If `hosts` is omitted, the page is global.

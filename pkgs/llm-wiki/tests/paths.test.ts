@@ -61,17 +61,17 @@ describe("domain, area, and host normalization", () => {
   });
 
   it("normalizes hosts and evaluates host scope", () => {
-    expect(normalizeHosts([" Pad-Nixos ", "pad-nixos", "evo-nixos "])).toEqual(["pad-nixos", "evo-nixos"]);
-    expect(appliesToHost([], "pad-nixos")).toBe(true);
-    expect(appliesToHost(["*"], "pad-nixos")).toBe(true);
-    expect(appliesToHost(["pad-nixos"], "pad-nixos")).toBe(true);
-    expect(appliesToHost(["evo-nixos"], "pad-nixos")).toBe(false);
+    expect(normalizeHosts([" Yoga-Nixos ", "yoga-nixos", "vps-nixos "])).toEqual(["yoga-nixos", "vps-nixos"]);
+    expect(appliesToHost([], "yoga-nixos")).toBe(true);
+    expect(appliesToHost(["*"], "yoga-nixos")).toBe(true);
+    expect(appliesToHost(["yoga-nixos"], "yoga-nixos")).toBe(true);
+    expect(appliesToHost(["vps-nixos"], "yoga-nixos")).toBe(false);
   });
 
   it("formats domain, area, and host suffixes", () => {
     expect(formatDomainSuffix("technical")).toBe(" [domain: technical]");
     expect(formatAreasSuffix(["infra", "ai"])).toBe(" [areas: infra, ai]");
-    expect(formatHostsSuffix(["pad-nixos", "evo-nixos"])).toBe(" [hosts: pad-nixos, evo-nixos]");
+    expect(formatHostsSuffix(["yoga-nixos", "vps-nixos"])).toBe(" [hosts: yoga-nixos, vps-nixos]");
     expect(formatHostsSuffix([])).toBe("");
   });
 });

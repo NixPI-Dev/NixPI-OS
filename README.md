@@ -121,7 +121,6 @@ These runtime files are installed under `~/.pi/agent/` by Home Manager.
 Pi seeds a Nix-managed `~/.pi/agent/models.json` for custom providers:
 
 - `synthetic` — OpenAI-compatible, authenticated by resolving the configured runtime secret path at request time
-- `llama` — local llama.cpp endpoint on `evo-nixos`
 
 Maintained hosts should set `home-manager.users.<name>.pi.syntheticApiKeyFile` to a runtime secret such as `/run/secrets/synthetic_api_key`.
 
@@ -136,9 +135,9 @@ PI stays unprivileged:
 - common operations have NOPASSWD sudoers rules
 - `sudoers` uses `timestamp_type=global` so credentials propagate across sessions
 
-### Private fleet config
+### Private host config
 
-The private fleet repo is expected at `~/NixPI/config` and should import this repo as a flake input.
+The private host config repo is expected at `~/NixPI/host-configs/<host>` and should import this repo as a flake input.
 
 It owns:
 - host compositions
@@ -147,7 +146,6 @@ It owns:
 - primary user identity values for `nixpi.user.*` and `nixpi.primaryUser.*`
 - private host overrides
 - personal Git identity
-- private technical and personal wiki content
 
 ## NixPI helper command
 

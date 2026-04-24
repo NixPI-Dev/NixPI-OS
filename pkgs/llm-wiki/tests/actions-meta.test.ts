@@ -125,7 +125,7 @@ summary: Visible page
           type: "unknown",
           aliases: "aka fallback",
           tags: "nixos",
-          hosts: " Pad-Nixos ",
+          hosts: " Yoga-Nixos ",
           areas: " Infra ",
           sourceIds: "SRC-2026-04-19-001",
         },
@@ -171,7 +171,7 @@ summary: Visible page
       domain: "technical",
       aliases: ["aka fallback"],
       tags: ["nixos"],
-      hosts: ["pad-nixos"],
+      hosts: ["yoga-nixos"],
       areas: ["infra"],
       sourceIds: ["SRC-2026-04-19-001"],
     });
@@ -253,7 +253,7 @@ summary: Stable personal notes
             summary: "Shared technical map",
             status: "active",
             tags: [],
-            hosts: ["pad-nixos"],
+            hosts: ["yoga-nixos"],
             domain: "technical",
             areas: ["infrastructure"],
             updated: "2026-04-19",
@@ -290,7 +290,7 @@ summary: Stable personal notes
 
         ## Concept Pages
 
-        - [[resources/technical/system-landscape|System Landscape]] [domain: technical] [areas: infrastructure] [hosts: pad-nixos] — Shared technical map
+        - [[resources/technical/system-landscape|System Landscape]] [domain: technical] [areas: infrastructure] [hosts: yoga-nixos] — Shared technical map
 
         ## Journal Pages
 
@@ -395,11 +395,11 @@ summary: Rebuilt page
   it("handleWikiStatus reports uninitialized wikis when pages are missing", () => {
     const blankRoot = mkdtempSync(path.join(os.tmpdir(), "llm-wiki-blank-"));
     try {
-      process.env.PI_LLM_WIKI_HOST = "pad-nixos";
+      process.env.PI_LLM_WIKI_HOST = "yoga-nixos";
       const result = handleWikiStatus(blankRoot);
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value.details).toEqual({ initialized: false, root: blankRoot, host: "pad-nixos" });
+        expect(result.value.details).toEqual({ initialized: false, root: blankRoot, host: "yoga-nixos" });
         expect(result.value.text).toBe("Wiki not initialized.");
       }
       expect(buildWikiDigest(blankRoot)).toBe("");
@@ -409,7 +409,7 @@ summary: Rebuilt page
   });
 
   it("handleWikiStatus reports domain counts and visible pages for the current host", () => {
-    process.env.PI_LLM_WIKI_HOST = "pad-nixos";
+    process.env.PI_LLM_WIKI_HOST = "yoga-nixos";
     writeFileSync(
       path.join(wikiRoot, "pages", "resources", "technical", "host-note.md"),
       `---
@@ -417,7 +417,7 @@ type: concept
 title: Host Note
 domain: technical
 tags: [host]
-hosts: [pad-nixos]
+hosts: [yoga-nixos]
 areas: [infrastructure]
 status: active
 updated: 2026-04-19
@@ -452,7 +452,7 @@ summary: Stable personal notes
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
       expect(result.value.details).toMatchObject({
-        host: "pad-nixos",
+        host: "yoga-nixos",
         visible: 2,
         domains: { personal: 1, technical: 1 },
       });
@@ -461,7 +461,7 @@ summary: Stable personal notes
   });
 
   it("handleWikiStatus counts sources, journals, and unspecified domains", () => {
-    process.env.PI_LLM_WIKI_HOST = "pad-nixos";
+    process.env.PI_LLM_WIKI_HOST = "yoga-nixos";
     mkdirSync(path.join(wikiRoot, "pages", "sources"), { recursive: true });
     writeFileSync(
       path.join(wikiRoot, "pages", "resources", "technical", "global-note.md"),
@@ -558,7 +558,7 @@ summary: Daily note
   });
 
   it("buildWikiDigest filters by host and excludes identity and journal pages", () => {
-    process.env.PI_LLM_WIKI_HOST = "pad-nixos";
+    process.env.PI_LLM_WIKI_HOST = "yoga-nixos";
     writeFileSync(
       path.join(wikiRoot, "pages", "resources", "technical", "shared.md"),
       `---
@@ -586,7 +586,7 @@ type: concept
 title: Laptop Technical Note
 domain: technical
 tags: [host]
-hosts: [pad-nixos]
+hosts: [yoga-nixos]
 areas: [infrastructure]
 status: active
 updated: 2026-04-19
@@ -643,7 +643,7 @@ summary: Stable personal notes
   });
 
   it("buildWikiDigest returns empty when no active canonical pages are visible", () => {
-    process.env.PI_LLM_WIKI_HOST = "pad-nixos";
+    process.env.PI_LLM_WIKI_HOST = "yoga-nixos";
     writeFileSync(
       path.join(wikiRoot, "pages", "resources", "technical", "draft.md"),
       `---
@@ -651,7 +651,7 @@ type: concept
 title: Draft Note
 domain: technical
 tags: []
-hosts: [evo-nixos]
+hosts: [vps-nixos]
 areas: [infrastructure]
 status: draft
 updated: 2026-04-19
@@ -685,7 +685,7 @@ summary: Daily note
   });
 
   it("buildWikiDigest omits summary separators for empty summaries and caps output", () => {
-    process.env.PI_LLM_WIKI_HOST = "pad-nixos";
+    process.env.PI_LLM_WIKI_HOST = "yoga-nixos";
     for (let i = 0; i < 16; i += 1) {
       writeFileSync(
         path.join(wikiRoot, "pages", "resources", "technical", `note-${i}.md`),

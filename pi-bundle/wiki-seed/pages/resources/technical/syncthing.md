@@ -18,7 +18,7 @@ created: 2026-04-21
 updated: 2026-04-21
 projects: [project/nixpi, project/personal-second-brain]
 people: [person/operator]
-systems: [host/evo-nixos]
+systems: [host/vps-nixos]
 sources: []
 related: [area/infrastructure]
 source_ids: []
@@ -33,6 +33,6 @@ Keep the wiki available across machines without locking it into one app or one h
 
 ## Operational context
 
-- runs with [evo-nixos](evo-nixos.md)
+- runs with [vps-nixos](vps-nixos.md)
 - supports [NixPI](../../projects/nixpi/index.md)
 - supports [Personal Second Brain](../../projects/personal-second-brain/index.md)

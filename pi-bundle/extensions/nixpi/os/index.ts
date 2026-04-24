@@ -99,7 +99,7 @@ async function runPrivileged(
 // ── OS helpers ────────────────────────────────────────────────────────────
 
 function systemFlakeDir() {
-  return join(process.env.HOME || "/home/alex", "NixPI", "config");
+  return join(process.env.HOME || "/home/alex", "NixPI", "host-configs", currentHostName());
 }
 
 function currentHostName() {
@@ -465,7 +465,7 @@ export default function osExtension(pi: ExtensionAPI) {
   pi.registerTool({
     name: "nix_config_proposal",
     label: "Nix Config Proposal",
-    description: "Inspect, validate, commit, push, and apply changes in the local NixPI repo at ~/NixPI/config.",
+    description: "Inspect, validate, commit, push, and apply changes in the local NixPI host config repo.",
     promptSnippet: "Use nix_config_proposal to manage the NixPI repo lifecycle — status, validate, commit, push, apply.",
     promptGuidelines: [
       "Use action=status first to understand the working tree.",
@@ -505,7 +505,7 @@ export default function osExtension(pi: ExtensionAPI) {
     promptSnippet: "Use nixos_update to inspect generations or rebuild/rollback the current host declaratively.",
     promptGuidelines: [
       "Use action=status before apply or rollback.",
-      "apply runs sudo -n nixos-rebuild switch against ~/NixPI/config#<current-host>.",
+      "apply runs sudo -n nixos-rebuild switch against ~/NixPI/host-configs/<current-host>#<current-host>.",
       "rollback runs sudo -n nixos-rebuild switch --rollback and requires confirmation.",
     ],
     parameters: Type.Object({

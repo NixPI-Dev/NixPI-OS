@@ -84,7 +84,7 @@ describe("searchRegistry", () => {
         objectType: "host",
         path: "pages/resources/technical/pad.md",
         folder: "resources/technical",
-        hosts: ["pad-nixos"],
+        hosts: ["yoga-nixos"],
         domain: "technical",
         areas: ["infra", "ops"],
       }),
@@ -99,23 +99,23 @@ describe("searchRegistry", () => {
       }),
     ]);
 
-    expect(searchRegistry(registry, "notes", { folder: "resources/technical", host: "pad-nixos" }).matches).toHaveLength(1);
-    expect(searchRegistry(registry, "notes", { folder: "resources/technical", host: "evo-nixos" }).matches).toHaveLength(0);
+    expect(searchRegistry(registry, "notes", { folder: "resources/technical", host: "yoga-nixos" }).matches).toHaveLength(1);
+    expect(searchRegistry(registry, "notes", { folder: "resources/technical", host: "vps-nixos" }).matches).toHaveLength(0);
     expect(searchRegistry(registry, "identity", { domain: "personal", type: "identity" }).matches[0]?.title).toBe("Personal Identity");
     expect(searchRegistry(registry, "identity", { objectType: "person", hostScope: "all" }).matches[0]?.title).toBe("Personal Identity");
-    expect(searchRegistry(registry, "notes", { objectType: "host", host: "pad-nixos" }).matches[0]?.title).toBe("pad Host Notes");
-    expect(searchRegistry(registry, "notes", { areas: ["infra", "ops"], host: "pad-nixos" }).matches).toHaveLength(1);
-    expect(searchRegistry(registry, "notes", { areas: ["infra", "missing"], host: "pad-nixos" }).matches).toHaveLength(0);
+    expect(searchRegistry(registry, "notes", { objectType: "host", host: "yoga-nixos" }).matches[0]?.title).toBe("pad Host Notes");
+    expect(searchRegistry(registry, "notes", { areas: ["infra", "ops"], host: "yoga-nixos" }).matches).toHaveLength(1);
+    expect(searchRegistry(registry, "notes", { areas: ["infra", "missing"], host: "yoga-nixos" }).matches).toHaveLength(0);
   });
 
   it("includes host-specific pages only in hostScope=all or matching host", () => {
     const registry = makeRegistry([
       makeEntry({ title: "Shared", path: "pages/resources/technical/shared.md", hosts: [] }),
-      makeEntry({ title: "Laptop", path: "pages/resources/technical/laptop.md", hosts: ["pad-nixos"] }),
+      makeEntry({ title: "Laptop", path: "pages/resources/technical/laptop.md", hosts: ["yoga-nixos"] }),
     ]);
 
-    expect(searchRegistry(registry, "laptop", { host: "evo-nixos" }).matches).toHaveLength(0);
-    const result = searchRegistry(registry, "laptop", { host: "evo-nixos", hostScope: "all" });
+    expect(searchRegistry(registry, "laptop", { host: "vps-nixos" }).matches).toHaveLength(0);
+    const result = searchRegistry(registry, "laptop", { host: "vps-nixos", hostScope: "all" });
     expect(result.matches).toHaveLength(1);
     expect(result.host).toBeUndefined();
   });
@@ -156,7 +156,7 @@ describe("handleWikiSearch", () => {
       domain: "personal",
       areas: ["journal"],
       folder: "journal/daily",
-      host: "pad-nixos",
+      host: "yoga-nixos",
     });
 
     expect(result.isOk()).toBe(true);
@@ -182,20 +182,20 @@ describe("handleWikiSearch", () => {
       makeEntry({
         title: "Laptop Note",
         objectType: "host",
-        hosts: ["pad-nixos"],
+        hosts: ["yoga-nixos"],
         domain: "technical",
         areas: ["infra", "ops"],
         summary: "Host-specific note",
       }),
     ]);
 
-    const result = handleWikiSearch(registry, "laptop", { host: "pad-nixos" });
+    const result = handleWikiSearch(registry, "laptop", { host: "yoga-nixos" });
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
       expect(result.value.text).toContain("(concept/host)");
       expect(result.value.text).toContain("[domain: technical]");
       expect(result.value.text).toContain("[areas: infra, ops]");
-      expect(result.value.text).toContain("[hosts: pad-nixos]");
+      expect(result.value.text).toContain("[hosts: yoga-nixos]");
     }
   });
 });

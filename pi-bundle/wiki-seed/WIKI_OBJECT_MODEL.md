@@ -84,7 +84,7 @@ Example:
 ```yaml
 projects: [project/nixpi]
 people: [person/operator]
-systems: [host/evo-nixos, service/syncthing]
+systems: [host/vps-nixos, service/syncthing]
 sources: [source/capacities-object-model-research]
 related: [concept/object-based-knowledge-system]
 ```

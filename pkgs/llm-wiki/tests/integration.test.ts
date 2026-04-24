@@ -33,7 +33,7 @@ describe("llm-wiki integration", () => {
   beforeEach(() => {
     wikiRoot = mkdtempSync(path.join(os.tmpdir(), "llm-wiki-integration-"));
     initWikiRoot(wikiRoot);
-    process.env.PI_LLM_WIKI_HOST = "pad-nixos";
+    process.env.PI_LLM_WIKI_HOST = "yoga-nixos";
     delete process.env.PI_LLM_WIKI_ALLOWED_DOMAINS;
   });
 
@@ -51,7 +51,7 @@ describe("llm-wiki integration", () => {
         title: "Flake Module Layering Notes",
         domain: "technical",
         areas: ["nixos", "pi"],
-        hosts: ["pad-nixos"],
+        hosts: ["yoga-nixos"],
         tags: ["capture"],
       },
       new Date("2026-04-21T10:00:00Z"),
@@ -72,7 +72,7 @@ describe("llm-wiki integration", () => {
       type: "source",
       domain: "technical",
       areas: ["nixos"],
-      host: "pad-nixos",
+      host: "yoga-nixos",
     });
     expect(sourceSearch.isOk()).toBe(true);
     if (sourceSearch.isOk()) {
@@ -85,7 +85,7 @@ describe("llm-wiki integration", () => {
       domain: "technical",
       folder: "resources/technical",
       areas: ["nixos", "pi"],
-      hosts: ["pad-nixos"],
+      hosts: ["yoga-nixos"],
       summary: "Layering rules for flake modules.",
     });
     expect(ensured.isOk()).toBe(true);
@@ -110,14 +110,14 @@ describe("llm-wiki integration", () => {
     const conceptSearch = handleWikiSearch(rebuilt.registry, "flake layering", {
       domain: "technical",
       folder: "resources/technical",
-      host: "pad-nixos",
+      host: "yoga-nixos",
     });
     expect(conceptSearch.isOk()).toBe(true);
     if (conceptSearch.isOk()) {
       expect(conceptSearch.value.details.matches[0]?.title).toBe("Flake Layering");
       expect(conceptSearch.value.text).toContain("[domain: technical]");
       expect(conceptSearch.value.text).toContain("[areas: nixos, pi]");
-      expect(conceptSearch.value.text).toContain("[hosts: pad-nixos]");
+      expect(conceptSearch.value.text).toContain("[hosts: yoga-nixos]");
     }
 
     expect(readEvents(wikiRoot).map((event) => event.kind)).toEqual(["capture", "page-create"]);
@@ -139,7 +139,7 @@ describe("llm-wiki integration", () => {
       title: "Extension Capture",
       domain: "technical",
       areas: ["pi"],
-      hosts: ["pad-nixos"],
+      hosts: ["yoga-nixos"],
     });
 
     await (ensureTool?.execute as (toolCallId: string, params: Record<string, unknown>) => Promise<unknown>)("ensure", {
@@ -148,7 +148,7 @@ describe("llm-wiki integration", () => {
       domain: "technical",
       folder: "resources/technical",
       areas: ["pi"],
-      hosts: ["pad-nixos"],
+      hosts: ["yoga-nixos"],
       summary: "Created through the extension tool.",
     });
 

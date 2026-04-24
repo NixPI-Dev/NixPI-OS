@@ -45,7 +45,7 @@ The `nixpi-permissions` repo is tiny and NixPI-specific. `llm-wiki` still has a 
 
 - `nix flake check` passes in `~/NixPI/repos/NixPI-OS`
 - `nix build .#llm-wiki --no-link` passes in `~/NixPI/repos/NixPI-OS`
-- `nix flake check` passes in `~/NixPI/config` against the local NixPI-OS path input
+- `nix flake check` passes in `~/NixPI/host-configs/vps-nixos` against the local NixPI-OS path input
 - after publishing NixPI-OS, update any remote-pinned config lock to the consolidated NixPI-OS revision
 - a rebuilt host contains:
   - `~/.pi/agent/extensions/llm-wiki/index.ts`
@@ -57,7 +57,7 @@ The `nixpi-permissions` repo is tiny and NixPI-specific. `llm-wiki` still has a 
 1. merge the local package and test move in NixPI-OS
 2. remove the `llm-wiki` input from NixPI-OS and refresh `repos/NixPI-OS/flake.lock`
 3. update the config flake lock to the new NixPI-OS revision after committing and pushing NixPI-OS
-4. run `nix flake check` in `~/NixPI/config`
+4. run `nix flake check` in `~/NixPI/host-configs/vps-nixos`
 5. rebuild the host
 6. deleted the standalone `NixPI-LLM-Wiki` and `nixpi-permissions` local checkouts after the host rebuild validated the consolidated NixPI-OS runtime
 

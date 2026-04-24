@@ -70,14 +70,14 @@ A host is a machine: workstation, server, VM, or container. It should be scoped 
 ## Example
 
 ```yaml
-id: host/evo-nixos
+id: host/vps-nixos
 schema_version: 1
 type: entity
 object_type: host
-title: evo-nixos
+title: vps-nixos
 domain: technical
 areas: [infrastructure, nixos]
-hosts: [evo-nixos]
+hosts: [vps-nixos]
 status: active
 validation_level: trusted
 created: 2026-04-21

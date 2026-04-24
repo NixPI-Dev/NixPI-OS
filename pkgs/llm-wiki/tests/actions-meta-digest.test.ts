@@ -25,7 +25,7 @@ describe("actions-meta planner digest", () => {
   it("surfaces overdue tasks, due-soon work, upcoming events, reminders, and today's note", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-04-21T09:00:00Z"));
-    process.env.PI_LLM_WIKI_HOST = "evo-nixos";
+    process.env.PI_LLM_WIKI_HOST = "vps-nixos";
 
     writeFileSync(
       path.join(wikiRoot, "pages", "journal", "daily", "2026-04-21.md"),

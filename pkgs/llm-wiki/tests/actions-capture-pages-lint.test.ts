@@ -33,7 +33,7 @@ describe("capture, pages, and lint", () => {
       text,
       {
         tags: ["capture"],
-        hosts: [" Pad-Nixos ", "pad-nixos"],
+        hosts: [" Yoga-Nixos ", "yoga-nixos"],
         domain: " Technical ",
         areas: [" Infrastructure ", "ai", "ai"],
       },
@@ -65,7 +65,7 @@ describe("capture, pages, and lint", () => {
       expect(page).toContain("domain: technical");
       expect(page).toContain("- infrastructure");
       expect(page).toContain("- ai");
-      expect(page).toContain("- pad-nixos");
+      expect(page).toContain("- yoga-nixos");
       expect(readEvents(wikiRoot)).toMatchObject([
         {
           kind: "capture",
@@ -139,7 +139,7 @@ describe("capture, pages, and lint", () => {
       domain: "technical",
       areas: ["nixos"],
       folder: "resources/technical",
-      hosts: ["pad-nixos"],
+      hosts: ["yoga-nixos"],
       summary: "Patterns for flakes",
     });
 
@@ -149,7 +149,7 @@ describe("capture, pages, and lint", () => {
       const content = readFileSync(path.join(wikiRoot, result.value.details.path), "utf8");
       expect(content).toContain("domain: technical");
       expect(content).toContain("- nixos");
-      expect(content).toContain("- pad-nixos");
+      expect(content).toContain("- yoga-nixos");
       expect(content).toContain("summary: Patterns for flakes");
     }
   });
@@ -399,7 +399,7 @@ summary: Journal page
     const result = handleEnsurePage(wikiRoot, {
       type: "concept",
       title: "General Note",
-      hosts: [" Pad-Nixos "],
+      hosts: [" Yoga-Nixos "],
       areas: [" General "],
     });
 
@@ -408,7 +408,7 @@ summary: Journal page
       expect(result.value.details.path).toBe("pages/general-note.md");
       const content = readFileSync(path.join(wikiRoot, result.value.details.path), "utf8");
       expect(content).not.toContain("domain:");
-      expect(content).toContain("- pad-nixos");
+      expect(content).toContain("- yoga-nixos");
       expect(content).toContain("- general");
     }
   });
@@ -444,7 +444,7 @@ title: ""
 domain: 123
 aliases: nope
 tags: []
-hosts: [pad-nixos, 1]
+hosts: [yoga-nixos, 1]
 areas: [nixos]
 status: publishing
 updated:

@@ -13,7 +13,7 @@ created: 2026-04-21
 updated: 2026-04-21
 projects: [project/nixpi, project/personal-second-brain]
 people: [person/operator]
-systems: [host/evo-nixos]
+systems: [host/vps-nixos]
 sources: []
 related: [concept/object-based-knowledge-system, source/capacities-object-model-research, task/build-pi-wiki-object-browser-extension]
 source_ids: [web:jamalhansen-notes-need-metadata, web:understandingdata-frontmatter-schema, web:basic-memory-note-format, web:deadwater-markdown-knowledge-systems, web:gno-local-knowledge-workspace]

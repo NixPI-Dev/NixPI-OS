@@ -18,7 +18,7 @@ created: 2026-04-21
 updated: 2026-04-21
 projects: []
 people: [person/operator]
-systems: [host/evo-nixos, service/syncthing]
+systems: [host/vps-nixos, service/syncthing]
 sources: [source/capacities-object-model-research]
 related: [project/nixpi, concept/object-based-knowledge-system, task/plan-wiki-migration, reminder/review-wiki-structure-2026-05-21, journal/2026-04-21]
 source_ids: []

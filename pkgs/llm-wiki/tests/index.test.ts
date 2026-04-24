@@ -7,7 +7,7 @@ const state = vi.hoisted(() => ({
   wikiRoot: "/tmp/wiki-root",
   technicalRoot: "/tmp/wiki-technical",
   personalRoot: "/tmp/wiki-personal",
-  host: "pad-nixos",
+  host: "yoga-nixos",
   digest: "",
   allowedDomains: undefined as string[] | undefined,
   protectWrite: false,
@@ -102,7 +102,7 @@ describe("llm-wiki extension wiring", () => {
     rmSync(process.env.HOME, { recursive: true, force: true });
     mkdirSync(process.env.HOME, { recursive: true });
     process.env.PI_LLM_WIKI_ROOTS = `technical:${state.technicalRoot},personal:${state.personalRoot}`;
-    state.host = "pad-nixos";
+    state.host = "yoga-nixos";
     state.digest = "";
     state.allowedDomains = undefined;
     state.protectWrite = false;
@@ -174,7 +174,7 @@ describe("llm-wiki extension wiring", () => {
       value: "hello world",
       domain: "technical",
       areas: ["infrastructure"],
-      hosts: ["pad-nixos"],
+      hosts: ["yoga-nixos"],
     });
 
     expect(state.captureCalls).toEqual([
@@ -185,7 +185,7 @@ describe("llm-wiki extension wiring", () => {
           title: undefined,
           kind: undefined,
           tags: undefined,
-          hosts: ["pad-nixos"],
+          hosts: ["yoga-nixos"],
           domain: "technical",
           areas: ["infrastructure"],
         },
@@ -357,7 +357,7 @@ describe("llm-wiki extension wiring", () => {
 
   it("injects wiki context, digest, persona, and caveman prompt blocks before agent start", async () => {
     seedPersonaPromptPages();
-    state.digest = "\n\n[WIKI PLANNER DIGEST — pad-nixos — 2026-04-21]\n- Shared Note";
+    state.digest = "\n\n[WIKI PLANNER DIGEST — yoga-nixos — 2026-04-21]\n- Shared Note";
     const api = await loadExtension();
     const result = (await api.fireEvent("before_agent_start", { systemPrompt: "BASE" })) as { systemPrompt: string };
 

@@ -18,7 +18,7 @@ created: 2026-04-21
 updated: 2026-04-21
 projects: [project/nixpi, project/personal-second-brain]
 people: []
-systems: [host/evo-nixos, service/syncthing]
+systems: [host/vps-nixos, service/syncthing]
 sources: []
 related: [area/health, area/infrastructure, journal/2026-04-21]
 source_ids: []
@@ -43,5 +43,5 @@ Primary operator of this wiki, the NixPI environment, and the personal planning 
 
 ## Systems in use
 
-- [evo-nixos](../technical/evo-nixos.md)
+- [vps-nixos](../technical/vps-nixos.md)
 - [Syncthing](../technical/syncthing.md)

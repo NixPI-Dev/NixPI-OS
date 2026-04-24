@@ -77,7 +77,7 @@ object_type: service
 title: Syncthing
 domain: technical
 areas: [infrastructure, sync]
-hosts: [evo-nixos]
+hosts: [vps-nixos]
 status: active
 validation_level: trusted
 created: 2026-04-21
@@ -87,6 +87,6 @@ last_reviewed: 2026-04-21
 next_review: 2026-06-20
 projects: [project/nixpi, project/personal-second-brain]
 people: [person/operator]
-systems: [host/evo-nixos]
+systems: [host/vps-nixos]
 summary: Sync daemon keeping the wiki portable across devices without cloud dependency.
 ```
