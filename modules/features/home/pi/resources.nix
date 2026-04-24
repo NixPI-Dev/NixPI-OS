@@ -231,7 +231,6 @@ in {
   home.file.".pi/agent/skills/os-operations/SKILL.md".source = piBundleRoot + "/skills/os-operations/SKILL.md";
   home.file.".pi/agent/skills/self-evolution/SKILL.md".source = piBundleRoot + "/skills/self-evolution/SKILL.md";
 
-
   # ── PI subagents ──────────────────────────────────────────────────────────
   home.file.".pi/agent/agents/scout.md".source = piBundleRoot + "/agents/scout.md";
   home.file.".pi/agent/agents/planner.md".source = piBundleRoot + "/agents/planner.md";
@@ -401,24 +400,31 @@ in {
     Service = {
       Type = "oneshot";
       ExecStart = let
-        script = pkgs.writeShellScript "nixpi-update-check" ''
-          set -euo pipefail
-          repo="${config.nixpi.repos.nixpi-os}"
-          status_file="${config.home.homeDirectory}/.pi/agent/update-status.json"
-          mkdir -p "$(dirname "$status_file")"
+        script = pkgs.writeShellApplication {
+          name = "nixpi-update-check";
+          runtimeInputs = [
+            pkgs.coreutils
+            pkgs.git
+          ];
+          text = ''
+            set -euo pipefail
+            repo="${config.nixpi.repos.nixpi-os}"
+            status_file="${config.home.homeDirectory}/.pi/agent/update-status.json"
+            mkdir -p "$(dirname "$status_file")"
 
-          branch=$(git -C "$repo" branch --show-current 2>/dev/null || echo "main")
-          git -C "$repo" fetch --quiet origin 2>/dev/null || true
+            branch=$(git -C "$repo" branch --show-current 2>/dev/null || echo "main")
+            git -C "$repo" fetch --quiet origin 2>/dev/null || true
 
-          behind=$(git -C "$repo" rev-list "HEAD..origin/$branch" --count 2>/dev/null || echo "0")
-          available="false"
-          [ "$behind" -gt 0 ] && available="true"
+            behind=$(git -C "$repo" rev-list "HEAD..origin/$branch" --count 2>/dev/null || echo "0")
+            available="false"
+            [ "$behind" -gt 0 ] && available="true"
 
-          printf '{"available":%s,"behindBy":%s,"checked":"%s","branch":"%s","notified":false}\n' \
-            "$available" "$behind" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$branch" \
-            > "$status_file"
-        '';
-      in "${script}";
+            printf '{"available":%s,"behindBy":%s,"checked":"%s","branch":"%s","notified":false}\n' \
+              "$available" "$behind" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$branch" \
+              > "$status_file"
+          '';
+        };
+      in "${script}/bin/nixpi-update-check";
     };
   };
 
