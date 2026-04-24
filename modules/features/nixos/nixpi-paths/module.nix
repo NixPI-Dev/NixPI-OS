@@ -44,12 +44,10 @@ in {
       type = lib.types.attrsOf lib.types.str;
       default = {
         nixpi-os = "${cfg.root}/repos/NixPI-OS";
-        llm-wiki = "${cfg.root}/repos/NixPI-LLM-Wiki";
       };
       defaultText = lib.literalExpression ''
         {
           nixpi-os = "''${config.nixpi.root}/repos/NixPI-OS";
-          llm-wiki = "''${config.nixpi.root}/repos/NixPI-LLM-Wiki";
         }
       '';
       description = ''

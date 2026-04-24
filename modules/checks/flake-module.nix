@@ -1,4 +1,4 @@
-{inputs, ...}: {
+{...}: {
   perSystem = {
     pkgs,
     system,
@@ -17,7 +17,7 @@
           touch $out
         '';
 
-      llm-wiki-tests = inputs.llm-wiki.checks.${system}.tests;
+      llm-wiki-tests = pkgs.callPackage ../../pkgs/llm-wiki/tests.nix {};
     };
   };
 }

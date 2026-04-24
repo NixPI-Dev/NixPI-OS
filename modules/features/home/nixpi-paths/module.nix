@@ -14,7 +14,6 @@
       type = lib.types.attrsOf lib.types.str;
       default = {
         nixpi-os = "${config.nixpi.root}/repos/NixPI-OS";
-        llm-wiki = "${config.nixpi.root}/repos/NixPI-LLM-Wiki";
       };
       defaultText = lib.literalExpression "Derived from nixpi.root";
       description = "Absolute paths to NixPI-Dev repos. Set by NixOS nixpi-paths module.";

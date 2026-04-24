@@ -26,11 +26,6 @@
     };
 
     llm-agents.url = "github:numtide/llm-agents.nix";
-
-    llm-wiki = {
-      url = "github:NixPI-Dev/NixPI-LLM-Wiki";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs = inputs @ {flake-parts, ...}:
