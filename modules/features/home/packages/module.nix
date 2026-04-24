@@ -100,6 +100,7 @@
             echo "NixPI Zellij session '$session' is not active. Run: nixpi-tui attach" >&2
             exit 69
           fi
+          # shellcheck disable=SC2016
           exec zellij --session "$session" run \
             --floating \
             --width 86% \
