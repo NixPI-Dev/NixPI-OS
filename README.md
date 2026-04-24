@@ -31,11 +31,22 @@ Features are auto-discovered from `modules/features/{nixos,home}/` — any direc
 Notable features:
 
 - `common`, `desktop`, `laptop`
+- `profile-server`, `profile-workstation`, `profile-laptop`
+- `primary-user`
 - `role-gaming`, `role-nvidia`
-- `service-networkmanager`, `service-openssh`, `service-reaction`, `service-syncthing`
+- `service-git-server`, `service-networkmanager`, `service-openssh`, `service-reaction`, `service-syncthing`
 - `service-llama-cpp`, `service-pi-gateway`
 
 Private host definitions now live in the separate fleet config repo and consume these exported modules.
+
+The profile modules are composition helpers:
+- `profile-server` imports the common base, primary user, OpenSSH, and reaction.
+- `profile-workstation` adds the desktop and NetworkManager stack.
+- `profile-laptop` extends workstation with laptop power/network defaults.
+
+`primary-user` creates the normal user described by `nixpi.user.*`; private fleet repos should provide SSH keys and secret policy through `nixpi.primaryUser.*`.
+
+`service-git-server` manages a restricted `git-shell` user plus bare repositories under `/srv/git` by default.
 
 ### `pkgs/`
 
@@ -133,6 +144,7 @@ It owns:
 - host compositions
 - hardware configs
 - user accounts and SSH keys
+- primary user identity values for `nixpi.user.*` and `nixpi.primaryUser.*`
 - private host overrides
 - personal Git identity
 - private technical and personal wiki content
