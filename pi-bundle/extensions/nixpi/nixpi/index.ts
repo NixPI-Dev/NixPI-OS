@@ -67,6 +67,10 @@ function truncate(text: string) {
   return text.length > 50_000 ? `${text.slice(0, 50_000)}\n... [truncated]` : text;
 }
 
+function isPersonalGatewayProfile() {
+  return process.env.PI_GATEWAY_PROFILE === "whatsapp-personal";
+}
+
 async function confirm(ctx: any, action: string) {
   if (!ctx.hasUI) return `Cannot perform "${action}" without interactive confirmation.`;
   const ok = await ctx.ui.confirm("Confirm action", `Allow: ${action}?`);
@@ -615,6 +619,21 @@ async function handleNixConfigProposal(
 export default function nixpiExtension(pi: ExtensionAPI) {
   registerPermissionsHooks(pi);
   registerWikiExtension(pi);
+
+  if (isPersonalGatewayProfile()) {
+    pi.on("session_start", async (_event, ctx) => {
+      if (ctx.hasUI) {
+        ctx.ui.setStatus("nixpi", "NixPI WhatsApp personal mode");
+      }
+    });
+
+    pi.on("before_agent_start", async (event) => {
+      const note = "\n\n[WHATSAPP PERSONAL MODE]\nThis session is restricted to personal wiki, reminders, tasks, journal, agenda, and life management. NixPI host, OS, repository, shell, and deployment tools are intentionally not registered in this profile.";
+      return { systemPrompt: event.systemPrompt + note };
+    });
+
+    return;
+  }
 
   // ── NixPI runtime tools ────────────────────────────────────────────────
 

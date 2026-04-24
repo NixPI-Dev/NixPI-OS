@@ -1,18 +1,7 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { parse } from "chrono-node";
-
-function getWikiRoot(): string {
-  if (process.env.PI_LLM_WIKI_DIR_PERSONAL) return process.env.PI_LLM_WIKI_DIR_PERSONAL;
-  for (const entry of (process.env.PI_LLM_WIKI_ROOTS ?? "").split(",")) {
-    const [name, ...rest] = entry.split(":");
-    if (name?.trim().toLowerCase() === "personal") {
-      const root = rest.join(":").trim();
-      if (root) return root;
-    }
-  }
-  return process.env.PI_LLM_WIKI_DIR ?? path.join(process.cwd(), "Knowledge");
-}
+import { getPersonalWikiRoot, rebuildPersonalRegistry } from "./wiki.js";
 
 function todayStamp(): string {
   return new Date().toISOString().slice(0, 10);
@@ -46,6 +35,7 @@ function cleanActionText(value: string): string {
     .replace(/^[\s,.-]+/, "")
     .replace(/[\s,.-]+$/, "")
     .replace(/^(to|for|about)\s+/i, "")
+    .replace(/\s+(by|on)$/i, "")
     .replace(/\s{2,}/g, " ")
     .trim();
 }
@@ -113,7 +103,7 @@ export class PersonalTaskService {
       return "I couldn't figure out the task action. Try something like 'task: renew passport' or 'add a task to book dentist by friday'.";
     }
 
-    const wikiRoot = getWikiRoot();
+    const wikiRoot = getPersonalWikiRoot();
     const tasksDir = path.join(wikiRoot, "pages", "planner", "tasks");
     mkdirSync(tasksDir, { recursive: true });
 
@@ -173,6 +163,7 @@ export class PersonalTaskService {
     ].join("\n");
 
     writeFileSync(filePath, content, "utf-8");
+    rebuildPersonalRegistry(wikiRoot);
 
     return due
       ? `Okay — I created a task due ${due}: ${action}.`

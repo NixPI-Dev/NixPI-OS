@@ -30,7 +30,7 @@ export class WhatsAppTransport implements GatewayTransport {
   }
 
   async sendText(message: InboundMessage, text: string): Promise<void> {
-    await this.transport.sendText(message.senderId, text);
+    await this.transport.sendText(message.isGroup ? message.chatId : message.senderId, text);
   }
 
   async sendTextToRecipient(recipientId: string, text: string): Promise<void> {

@@ -7,6 +7,7 @@ const execFileAsync = promisify(execFile);
 
 type PromptOptions = {
   systemPromptAddendum?: string;
+  env?: NodeJS.ProcessEnv;
 };
 
 /** Wraps the pi CLI in print mode for non-interactive gateway use. */
@@ -36,7 +37,7 @@ export class PiClient {
 
     console.log(`pi: prompt start session=${resolved} chars=${message.length}`);
 
-    const { stdout, stderr } = await this.runPromptProcess(args).catch((err: any) => {
+    const { stdout, stderr } = await this.runPromptProcess(args, options.env).catch((err: any) => {
       const out = err.stdout ?? "";
       const text = out.trim() || err.stderr?.trim() || err.message || "Pi returned an error.";
       console.error(`pi: prompt failed session=${resolved}: ${text}`);
@@ -62,11 +63,11 @@ export class PiClient {
     }
   }
 
-  private runPromptProcess(args: string[]): Promise<{ stdout: string; stderr: string }> {
+  private runPromptProcess(args: string[], envOverrides: NodeJS.ProcessEnv = {}): Promise<{ stdout: string; stderr: string }> {
     return new Promise((resolve, reject) => {
       const child = spawn(this.piBin, args, {
         cwd: this.cwd,
-        env: process.env,
+        env: { ...process.env, ...envOverrides },
         stdio: ["ignore", "pipe", "pipe"],
       });
 

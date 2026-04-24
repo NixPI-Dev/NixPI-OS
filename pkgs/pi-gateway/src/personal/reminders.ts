@@ -1,18 +1,7 @@
 import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { parse } from "chrono-node";
-
-function getWikiRoot(): string {
-  if (process.env.PI_LLM_WIKI_DIR_PERSONAL) return process.env.PI_LLM_WIKI_DIR_PERSONAL;
-  for (const entry of (process.env.PI_LLM_WIKI_ROOTS ?? "").split(",")) {
-    const [name, ...rest] = entry.split(":");
-    if (name?.trim().toLowerCase() === "personal") {
-      const root = rest.join(":").trim();
-      if (root) return root;
-    }
-  }
-  return process.env.PI_LLM_WIKI_DIR ?? path.join(process.cwd(), "Knowledge");
-}
+import { getPersonalWikiRoot, rebuildPersonalRegistry } from "./wiki.js";
 
 function todayStamp(): string {
   return new Date().toISOString().slice(0, 10);
@@ -94,7 +83,7 @@ export class PersonalReminderService {
       return "I understood the time, but not what you want to be reminded about. Try 'remind me tomorrow at 9 to call mom'.";
     }
 
-    const wikiRoot = getWikiRoot();
+    const wikiRoot = getPersonalWikiRoot();
     const remindersDir = path.join(wikiRoot, "pages", "planner", "reminders");
     mkdirSync(remindersDir, { recursive: true });
 
@@ -147,6 +136,7 @@ export class PersonalReminderService {
     ].join("\n");
 
     writeFileSync(filePath, content, "utf-8");
+    rebuildPersonalRegistry(wikiRoot);
 
     return `Okay — I created a reminder for ${remindAtText}: ${action}.`;
   }

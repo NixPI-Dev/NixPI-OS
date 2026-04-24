@@ -1,4 +1,4 @@
-import { mkdir } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import makeWASocket, {
   DisconnectReason,
@@ -58,6 +58,7 @@ export class WhatsAppBaileysTransport {
 
   async healthCheck(): Promise<void> {
     await mkdir(this.getAuthDir(), { recursive: true });
+    await this.loadLidMappings();
   }
 
   async sendText(recipient: string, text: string): Promise<void> {
@@ -137,6 +138,7 @@ export class WhatsAppBaileysTransport {
   private async runSocket(onMessage: (msg: WhatsAppInbound) => Promise<void>): Promise<never> {
     const authDir = this.getAuthDir();
     await mkdir(authDir, { recursive: true });
+    await this.loadLidMappings();
 
     const [{ state, saveCreds }, versionInfo] = await Promise.all([
       import("@whiskeysockets/baileys").then(({ useMultiFileAuthState }) => useMultiFileAuthState(authDir)),
@@ -256,7 +258,11 @@ export class WhatsAppBaileysTransport {
 
   private rememberLidMapping(lidJid?: string | null, pnJid?: string | null): void {
     if (!lidJid || !pnJid || !lidJid.endsWith("@lid")) return;
+    if (this.lidToPn.get(lidJid) === pnJid) return;
     this.lidToPn.set(lidJid, pnJid);
+    void this.saveLidMappings().catch((err) => {
+      console.error("Failed to persist WhatsApp LID mappings:", err);
+    });
   }
 
   private resolvePnForJid(jid: string): string | undefined {
@@ -274,8 +280,32 @@ export class WhatsAppBaileysTransport {
     }
   }
 
+  private async loadLidMappings(): Promise<void> {
+    try {
+      const raw = await readFile(this.getLidMapPath(), "utf-8");
+      const parsed = JSON.parse(raw) as Record<string, string>;
+      for (const [lid, pn] of Object.entries(parsed)) {
+        if (lid.endsWith("@lid") && pn) this.lidToPn.set(lid, pn);
+      }
+    } catch (err: any) {
+      if (err?.code !== "ENOENT") {
+        console.error("Failed to load WhatsApp LID mappings:", err);
+      }
+    }
+  }
+
+  private async saveLidMappings(): Promise<void> {
+    await mkdir(this.config.sessionDataPath, { recursive: true });
+    const data = Object.fromEntries([...this.lidToPn.entries()].sort(([a], [b]) => a.localeCompare(b)));
+    await writeFile(this.getLidMapPath(), JSON.stringify(data, null, 2), "utf-8");
+  }
+
   private getAuthDir(): string {
     return path.join(this.config.sessionDataPath, "baileys");
+  }
+
+  private getLidMapPath(): string {
+    return path.join(this.config.sessionDataPath, "lid-map.json");
   }
 
   private getQrPath(): string {

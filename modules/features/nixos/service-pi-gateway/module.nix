@@ -43,6 +43,8 @@
     }
   );
 in {
+  imports = [../nixpi-paths/module.nix];
+
   options.services.pi-gateway = {
     enable = lib.mkEnableOption "NixPI generic transport gateway";
 
@@ -92,6 +94,32 @@ in {
       type = lib.types.int;
       default = 4;
       description = "Maximum number of reply chunks to send per message.";
+    };
+
+    technicalWikiDir = lib.mkOption {
+      type = lib.types.str;
+      default = config.nixpi.wiki.technical;
+      defaultText = lib.literalExpression "config.nixpi.wiki.technical";
+      description = "Technical wiki root exposed to Pi gateway sessions.";
+    };
+
+    personalWikiDir = lib.mkOption {
+      type = lib.types.str;
+      default = config.nixpi.wiki.personal;
+      defaultText = lib.literalExpression "config.nixpi.wiki.personal";
+      description = "Personal wiki root exposed to Pi gateway sessions and WhatsApp personal commands.";
+    };
+
+    syntheticApiKeyFile = lib.mkOption {
+      type = lib.types.str;
+      default = "/run/secrets/synthetic_api_key";
+      description = "Runtime file containing the Synthetic API key for Pi prompts.";
+    };
+
+    extraReadWritePaths = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [];
+      description = "Additional filesystem paths the gateway systemd service may write.";
     };
 
     signal = {
@@ -215,10 +243,17 @@ in {
       after = ["network.target"];
       wantedBy = ["multi-user.target"];
       path = [pkgs.pi];
-      environment = lib.optionalAttrs cfg.whatsapp.enable {
+      environment = {
         HOME = "/home/${cfg.user}";
         XDG_CONFIG_HOME = "${cfg.stateDir}/xdg/config";
         XDG_CACHE_HOME = "${cfg.stateDir}/xdg/cache";
+        PI_LLM_WIKI_DIR = cfg.technicalWikiDir;
+        PI_LLM_WIKI_DIR_TECHNICAL = cfg.technicalWikiDir;
+        PI_LLM_WIKI_DIR_PERSONAL = cfg.personalWikiDir;
+        PI_LLM_WIKI_ROOTS = "technical:${cfg.technicalWikiDir},personal:${cfg.personalWikiDir}";
+        PI_LLM_WIKI_ALLOWED_DOMAINS = "technical,personal";
+        PI_LLM_WIKI_HOST = config.networking.hostName;
+        PI_SYNTHETIC_API_KEY_FILE = cfg.syntheticApiKeyFile;
       };
 
       serviceConfig = {
@@ -237,7 +272,14 @@ in {
         NoNewPrivileges = true;
         ProtectSystem = "strict";
         ProtectHome = "read-only";
-        ReadWritePaths = [cfg.stateDir "/home/${cfg.user}/.pi"];
+        ReadWritePaths =
+          [
+            cfg.stateDir
+            "/home/${cfg.user}/.pi"
+          ]
+          ++ lib.optionals cfg.signal.enable [cfg.technicalWikiDir]
+          ++ lib.optionals cfg.whatsapp.enable [cfg.personalWikiDir]
+          ++ cfg.extraReadWritePaths;
         PrivateTmp = true;
         PrivateDevices = true;
         ProtectKernelTunables = true;

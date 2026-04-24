@@ -50,6 +50,7 @@ export class Router {
       const existing = this.store.getChatSession(msg.chatId);
       const reply = await this.pi.prompt(personalRoute.message, existing?.sessionPath ?? null, {
         systemPromptAddendum: personalRoute.systemPromptAddendum,
+        env: this.getPiEnvForMessage(msg),
       });
       this.store.upsertChatSession(msg.chatId, msg.senderId, reply.sessionPath);
 
@@ -113,5 +114,16 @@ export class Router {
     }
 
     return null;
+  }
+
+  private getPiEnvForMessage(msg: InboundMessage): NodeJS.ProcessEnv {
+    if (msg.channel !== "whatsapp") return {};
+
+    const personalRoot = process.env.PI_LLM_WIKI_DIR_PERSONAL;
+    return {
+      PI_GATEWAY_PROFILE: "whatsapp-personal",
+      PI_LLM_WIKI_ALLOWED_DOMAINS: "personal",
+      ...(personalRoot ? { PI_LLM_WIKI_DIR: personalRoot } : {}),
+    };
   }
 }

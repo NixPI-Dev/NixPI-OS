@@ -24,6 +24,13 @@ buildNpmPackage {
     runHook postBuild
   '';
 
+  doCheck = true;
+  checkPhase = ''
+    runHook preCheck
+    npm run test
+    runHook postCheck
+  '';
+
   installPhase = ''
     runHook preInstall
 

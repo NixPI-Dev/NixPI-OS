@@ -171,8 +171,6 @@ in {
   # models.json is no longer managed by Nix — the synthetic extension
   # registers the provider dynamically at PI startup.
 
-
-
   # ── Session variables ─────────────────────────────────────────────────────
   home.sessionVariables.PI_LLM_WIKI_DIR = defaultWikiDir;
   home.sessionVariables.PI_LLM_WIKI_DIR_TECHNICAL = technicalWikiDir;

@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import type { Store } from "../core/store.js";
 import type { GatewayTransport } from "../transports/types.js";
+import { getPersonalWikiRoot } from "./wiki.js";
 
 type ReminderRecord = {
   key: string;
@@ -11,18 +12,6 @@ type ReminderRecord = {
   forText?: string;
   summary?: string;
 };
-
-function getWikiRoot(): string {
-  if (process.env.PI_LLM_WIKI_DIR_PERSONAL) return process.env.PI_LLM_WIKI_DIR_PERSONAL;
-  for (const entry of (process.env.PI_LLM_WIKI_ROOTS ?? "").split(",")) {
-    const [name, ...rest] = entry.split(":");
-    if (name?.trim().toLowerCase() === "personal") {
-      const root = rest.join(":").trim();
-      if (root) return root;
-    }
-  }
-  return process.env.PI_LLM_WIKI_DIR ?? path.join(process.cwd(), "Knowledge");
-}
 
 function parseFrontmatter(raw: string): Record<string, string> {
   if (!raw.startsWith("---\n")) return {};
@@ -52,7 +41,7 @@ function parseReminderDateTime(value: string): Date | null {
 }
 
 function scanReminderFiles(): ReminderRecord[] {
-  const remindersDir = path.join(getWikiRoot(), "pages", "planner", "reminders");
+  const remindersDir = path.join(getPersonalWikiRoot(), "pages", "planner", "reminders");
   if (!existsSync(remindersDir)) return [];
 
   const files = readdirSync(remindersDir)

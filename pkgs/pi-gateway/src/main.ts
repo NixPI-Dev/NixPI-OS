@@ -78,15 +78,15 @@ async function main(): Promise<void> {
             `router: result for ${msg.messageId} -> replies=${result.replies.length} markProcessed=${result.markProcessed}`,
           );
 
+          if (result.markProcessed) {
+            store.markProcessed(msg.messageId, msg.chatId, msg.senderId, msg.timestamp);
+            console.log(`router: marked processed ${msg.messageId}`);
+          }
+
           for (const [index, reply] of result.replies.entries()) {
             console.log(`router: sending reply ${index + 1}/${result.replies.length} for ${msg.messageId}`);
             await transport.sendText(msg, reply);
             console.log(`router: sent reply ${index + 1}/${result.replies.length} for ${msg.messageId}`);
-          }
-
-          if (result.markProcessed) {
-            store.markProcessed(msg.messageId, msg.chatId, msg.senderId, msg.timestamp);
-            console.log(`router: marked processed ${msg.messageId}`);
           }
         } finally {
           await thinking?.stop().catch((err) => {

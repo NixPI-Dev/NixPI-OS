@@ -1,17 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-
-function getWikiRoot(): string {
-  if (process.env.PI_LLM_WIKI_DIR_PERSONAL) return process.env.PI_LLM_WIKI_DIR_PERSONAL;
-  for (const entry of (process.env.PI_LLM_WIKI_ROOTS ?? "").split(",")) {
-    const [name, ...rest] = entry.split(":");
-    if (name?.trim().toLowerCase() === "personal") {
-      const root = rest.join(":").trim();
-      if (root) return root;
-    }
-  }
-  return process.env.PI_LLM_WIKI_DIR ?? path.join(process.cwd(), "Knowledge");
-}
+import { getPersonalWikiRoot, rebuildPersonalRegistry } from "./wiki.js";
 
 function todayStamp(): string {
   return new Date().toISOString().slice(0, 10);
@@ -121,7 +110,7 @@ export class PersonalJournalService {
 
     const date = todayStamp();
     const time = currentTimeStamp();
-    const wikiRoot = getWikiRoot();
+    const wikiRoot = getPersonalWikiRoot();
     const filePath = path.join(wikiRoot, "pages", "journal", "daily", `${date}.md`);
 
     const raw = ensureDailyNote(filePath, date);
@@ -129,6 +118,7 @@ export class PersonalJournalService {
     const updated = updateFrontmatterUpdated(raw, date);
     const next = appendUnderLog(updated, line);
     writeFileSync(filePath, next, "utf-8");
+    rebuildPersonalRegistry(wikiRoot);
 
     return `Okay — I added that to today's journal at ${time}.`;
   }

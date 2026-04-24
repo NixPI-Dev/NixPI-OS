@@ -1,22 +1,5 @@
 import os from "node:os";
-import path from "node:path";
-import { existsSync, readFileSync } from "node:fs";
-
-type RegistryEntry = {
-  type: string;
-  path: string;
-  title: string;
-  status?: string;
-  hosts?: string[];
-  domain?: string;
-  due?: string;
-  startDate?: string;
-  remindAt?: string;
-};
-
-type RegistryData = {
-  pages?: RegistryEntry[];
-};
+import { loadPersonalRegistry, type RegistryEntry } from "./wiki.js";
 
 function todayStamp(): string {
   return new Date().toISOString().slice(0, 10);
@@ -37,26 +20,9 @@ function appliesToHost(hosts: string[] | undefined, currentHost = getCurrentHost
   return normalized.includes(currentHost);
 }
 
-function getWikiRoot(): string {
-  if (process.env.PI_LLM_WIKI_DIR_PERSONAL) return process.env.PI_LLM_WIKI_DIR_PERSONAL;
-  for (const entry of (process.env.PI_LLM_WIKI_ROOTS ?? "").split(",")) {
-    const [name, ...rest] = entry.split(":");
-    if (name?.trim().toLowerCase() === "personal") {
-      const root = rest.join(":").trim();
-      if (root) return root;
-    }
-  }
-  return process.env.PI_LLM_WIKI_DIR ?? path.join(process.cwd(), "Knowledge");
-}
-
 function loadRegistry(): RegistryEntry[] {
-  const registryPath = path.join(getWikiRoot(), "meta", "registry.json");
-  if (!existsSync(registryPath)) return [];
-
   try {
-    const raw = readFileSync(registryPath, "utf-8");
-    const parsed = JSON.parse(raw) as RegistryData;
-    return Array.isArray(parsed.pages) ? parsed.pages : [];
+    return loadPersonalRegistry().pages;
   } catch (err) {
     console.error("Failed to load wiki registry:", err);
     return [];
