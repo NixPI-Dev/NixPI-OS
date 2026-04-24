@@ -7,7 +7,7 @@ title: Consolidate PI runtime extensions into NixPI-OS
 tags: [nixpi, evolution]
 domain: technical
 areas: [ai, infrastructure]
-status: validating
+status: applied
 risk: medium
 area: extensions
 validation_level: working
@@ -59,7 +59,7 @@ The `nixpi-permissions` repo is tiny and NixPI-specific. `llm-wiki` still has a 
 3. update the config flake lock to the new NixPI-OS revision after committing and pushing NixPI-OS
 4. run `nix flake check` in `~/NixPI/config`
 5. rebuild the host
-6. archive or retire the standalone `NixPI-LLM-Wiki` and `nixpi-permissions` repos once the deployed system no longer reads from them
+6. deleted the standalone `NixPI-LLM-Wiki` and `nixpi-permissions` local checkouts after the host rebuild validated the consolidated NixPI-OS runtime
 
 ## Rollback
 
