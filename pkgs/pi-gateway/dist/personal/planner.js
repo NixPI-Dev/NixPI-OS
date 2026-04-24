@@ -19,6 +19,16 @@ function appliesToHost(hosts, currentHost = getCurrentHost()) {
     return normalized.includes(currentHost);
 }
 function getWikiRoot() {
+    if (process.env.PI_LLM_WIKI_DIR_PERSONAL)
+        return process.env.PI_LLM_WIKI_DIR_PERSONAL;
+    for (const entry of (process.env.PI_LLM_WIKI_ROOTS ?? "").split(",")) {
+        const [name, ...rest] = entry.split(":");
+        if (name?.trim().toLowerCase() === "personal") {
+            const root = rest.join(":").trim();
+            if (root)
+                return root;
+        }
+    }
     return process.env.PI_LLM_WIKI_DIR ?? path.join(process.cwd(), "Knowledge");
 }
 function loadRegistry() {

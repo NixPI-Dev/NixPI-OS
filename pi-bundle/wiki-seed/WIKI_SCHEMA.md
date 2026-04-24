@@ -20,7 +20,7 @@ Schema version: `1`
 | `meta/tags.md` | **new** | controlled tag vocabulary |
 | `meta/relation-types.md` | **new** | controlled relation type vocabulary |
 
-Notes without `schema_version` are considered **v1 (legacy)**.
+Notes without `schema_version` are invalid for new NixPI wiki content.
 
 ---
 
@@ -311,4 +311,4 @@ Never use wikilinks or app-specific link syntax as the canonical reference.
 - ❌ relation types not in `meta/relation-types.md`
 - ❌ wikilinks or path-based app links instead of Markdown relative links
 - ❌ review fields on tasks, events, reminders, or journals
-- ❌ new notes placed in legacy folders
+- ❌ new notes placed in deprecated folders

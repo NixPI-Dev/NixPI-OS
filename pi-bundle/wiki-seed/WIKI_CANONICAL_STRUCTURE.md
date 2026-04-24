@@ -130,4 +130,4 @@ Plain Markdown templates with no editor-specific assumptions.
 Do not use folder structure as the primary personal-vs-technical split.
 That distinction now lives in frontmatter via `domain:`.
 
-Avoid creating new material in legacy layouts from the old vault.
+Avoid creating new material in deprecated layouts from the old vault.

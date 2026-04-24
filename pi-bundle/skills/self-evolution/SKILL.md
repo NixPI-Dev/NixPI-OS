@@ -14,7 +14,7 @@ Prefer the lightest viable option: **Skill → Extension → Service**.
 | Need | Mechanism | Example |
 |---|---|---|
 | Pi needs knowledge or a procedure | **Skill** | Operating guide, migration workflow |
-| Pi needs tools, hooks, or commands | **Extension** | New tool, prompt injection, guardrails |
+| Pi needs tools, hooks, or commands | **Extension** | New tool, prompt injection, policy checks |
 | Pi needs an isolated long-running workload | **Service** | LLM server, gateway, daemon |
 
 ## Evolution Workflow

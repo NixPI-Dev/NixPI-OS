@@ -60,7 +60,7 @@
 
   syntheticProvider = {
     baseUrl = "https://api.synthetic.new/openai/v1";
-    apiKey = "SYNTHETIC_API_KEY";
+    apiKey = "!cat ${config.pi.syntheticApiKeyFile}";
     api = "openai-completions";
     compat = {
       supportsDeveloperRole = false;
@@ -288,35 +288,11 @@ in {
   # ── Activation: Pi custom providers/models (declarative) ─────────────────
   home.activation.piModels = lib.hm.dag.entryAfter ["writeBoundary"] ''
     models_path="$HOME/.pi/agent/models.json"
-    key_file="${config.pi.syntheticApiKeyFile}"
     mkdir -p "$(dirname "$models_path")"
 
-    if [ -f "$key_file" ]; then
-      synthetic_key=$(tr -d '[:space:]' < "$key_file")
-    else
-      synthetic_key=""
-    fi
-
-    if [ -n "$synthetic_key" ]; then
-      ${pkgs.jq}/bin/jq \
-        --arg syntheticKey "$synthetic_key" \
-        '.providers.synthetic.apiKey = $syntheticKey' \
-        ${piModelsBaseJson} > "$models_path.tmp"
-    else
-      cp ${piModelsBaseJson} "$models_path.tmp"
-    fi
-
+    cp ${piModelsBaseJson} "$models_path.tmp"
     chmod 0600 "$models_path.tmp"
     mv "$models_path.tmp" "$models_path"
-  '';
-
-  # ── Activation: guardrails seed (idempotent) ──────────────────────────────
-  home.activation.piGuardrails = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    guardrails_path="$HOME/.pi/agent/guardrails.yaml"
-    mkdir -p "$(dirname "$guardrails_path")"
-    if [ ! -e "$guardrails_path" ]; then
-      cp ${piBundleRoot + "/extensions/nixpi/nixpi/guardrails.yaml"} "$guardrails_path"
-    fi
   '';
 
   # Remove the old runtime-installed Caveman Lite git package (now declarative).
@@ -334,6 +310,7 @@ in {
 
     seed_wiki_root() {
       wiki_root="$1"
+      wiki_domain="$2"
 
       # Create directory skeleton (safe to run repeatedly)
       mkdir -p \
@@ -368,6 +345,16 @@ in {
       # Seed files — only if the destination does not already exist
       while IFS= read -r src; do
         rel="''${src#$seed/}"
+        case "$rel" in
+          meta/index.md|meta/log.md)
+            continue
+            ;;
+          pages/*)
+            if ! ${pkgs.gnugrep}/bin/grep -Eq "^domain: $wiki_domain$" "$src"; then
+              continue
+            fi
+            ;;
+        esac
         dest="$wiki_root/$rel"
         if [ ! -e "$dest" ]; then
           mkdir -p "$(dirname "$dest")"
@@ -381,8 +368,8 @@ in {
       fi
     }
 
-    seed_wiki_root '${technicalWikiDir}'
-    seed_wiki_root '${personalWikiDir}'
+    seed_wiki_root '${technicalWikiDir}' technical
+    seed_wiki_root '${personalWikiDir}' personal
   '';
 
   # ── Update status timer — checks if NixPI repo is behind origin ────────

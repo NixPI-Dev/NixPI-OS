@@ -108,12 +108,12 @@ These runtime files are installed under `~/.pi/agent/` by Home Manager.
 
 Pi seeds a Nix-managed `~/.pi/agent/models.json` for custom providers:
 
-- `synthetic` — OpenAI-compatible, authenticated from the configured runtime secret path
+- `synthetic` — OpenAI-compatible, authenticated by resolving the configured runtime secret path at request time
 - `llama` — local llama.cpp endpoint on `evo-nixos`
 
 Maintained hosts should set `home-manager.users.<name>.pi.syntheticApiKeyFile` to a runtime secret such as `/run/secrets/synthetic_api_key`.
 
-This keeps the key out of the Nix store while preserving it across rebuilds.
+This keeps the key out of the Nix store and out of long-lived PI model config while preserving it across rebuilds.
 
 ### Privileged PI flows
 
